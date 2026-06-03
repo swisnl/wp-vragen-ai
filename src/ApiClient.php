@@ -24,7 +24,7 @@ class ApiClient
 
         return [
             'customer' => defined('VRAGENAI_CUSTOMER') ? (string) VRAGENAI_CUSTOMER : (string) ($settings['customer'] ?? ''),
-            'token'    => defined('VRAGENAI_TOKEN') ? (string) VRAGENAI_TOKEN : (string) ($settings['token'] ?? ''),
+            'token' => defined('VRAGENAI_TOKEN') ? (string) VRAGENAI_TOKEN : (string) ($settings['token'] ?? ''),
         ];
     }
 
@@ -35,49 +35,70 @@ class ApiClient
         return new self($creds['customer'], $creds['token']);
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>|\WP_Error
+     */
     public function createDocument(array $attributes): array|\WP_Error
     {
         return $this->request('POST', '/documents', [
-            'type'       => 'documents',
+            'type' => 'documents',
             'attributes' => $attributes,
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>|\WP_Error
+     */
     public function updateDocument(string $id, array $attributes): array|\WP_Error
     {
         return $this->request('PATCH', "/documents/{$id}", [
-            'type'       => 'documents',
-            'id'         => $id,
+            'type' => 'documents',
+            'id' => $id,
             'attributes' => $attributes,
         ]);
     }
 
+    /**
+     * @return array<string, mixed>|\WP_Error
+     */
     public function deleteDocument(string $id): array|\WP_Error
     {
         return $this->request('DELETE', "/documents/{$id}");
     }
 
+    /**
+     * @return array<string, mixed>|\WP_Error
+     */
     public function findByExternalReference(string $ref): array|\WP_Error
     {
-        return $this->request('GET', '/documents?' . http_build_query([
+        return $this->request('GET', '/documents?'.http_build_query([
             'filter' => ['external_reference' => $ref],
-            'page'   => ['size' => 1, 'number' => 1],
+            'page' => ['size' => 1, 'number' => 1],
         ]));
     }
 
+    /**
+     * @return array<string, mixed>|\WP_Error
+     */
     public function getSystems(): array|\WP_Error
     {
         return $this->request('GET', '/systems');
     }
 
+    /**
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>|\WP_Error
+     */
     private function request(string $method, string $path, array $body = []): array|\WP_Error
     {
         $args = [
-            'method'  => $method,
+            'method' => $method,
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->token,
-                'Accept'        => 'application/vnd.api+json',
-                'Content-Type'  => 'application/vnd.api+json',
+                'Authorization' => 'Bearer '.$this->token,
+                'Accept' => 'application/vnd.api+json',
+                'Content-Type' => 'application/vnd.api+json',
             ],
             'timeout' => 15,
         ];
@@ -86,14 +107,14 @@ class ApiClient
             $args['body'] = wp_json_encode(['data' => $body]);
         }
 
-        $response = wp_remote_request($this->baseUrl . $path, $args);
+        $response = wp_remote_request($this->baseUrl.$path, $args);
 
         if (is_wp_error($response)) {
             return $response;
         }
 
         $code = wp_remote_retrieve_response_code($response);
-        $raw  = wp_remote_retrieve_body($response);
+        $raw = wp_remote_retrieve_body($response);
 
         if ($code >= 400) {
             return new \WP_Error('vragenai_api_error', "HTTP {$code}: {$raw}");

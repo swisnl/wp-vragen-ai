@@ -20,13 +20,13 @@ class DocumentSyncContentTest extends TestCase
         return $method->invoke($sync, $post);
     }
 
-    public function testWrapsBareTextInParagraph(): void
+    public function test_wraps_bare_text_in_paragraph(): void
     {
         Functions\when('apply_filters')->returnArg(2);
         Functions\when('esc_html')->returnArg(1);
 
         $html = $this->buildContent(new \WP_Post([
-            'post_title'   => 'My Title',
+            'post_title' => 'My Title',
             'post_content' => 'Hello world',
         ]));
 
@@ -36,13 +36,13 @@ class DocumentSyncContentTest extends TestCase
         );
     }
 
-    public function testDoesNotDoubleWrapBlockLevelContent(): void
+    public function test_does_not_double_wrap_block_level_content(): void
     {
         Functions\when('apply_filters')->returnArg(2);
         Functions\when('esc_html')->returnArg(1);
 
         $html = $this->buildContent(new \WP_Post([
-            'post_title'   => 'Title',
+            'post_title' => 'Title',
             'post_content' => '<p>Already wrapped</p>',
         ]));
 

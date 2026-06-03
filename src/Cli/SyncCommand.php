@@ -25,31 +25,35 @@ class SyncCommand
      *     wp vragenai sync --dry-run
      *
      * @when after_wp_load
+     *
+     * @param  list<string>  $args
+     * @param  array<string, string>  $assoc
      */
     public function sync(array $args, array $assoc): void
     {
-        $settings     = (array) get_option('vragenai_settings', []);
+        $settings = (array) get_option('vragenai_settings', []);
         $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
 
-        if (!empty($assoc['post-type'])) {
+        if (! empty($assoc['post-type'])) {
             $enabledTypes = [$assoc['post-type']];
         }
 
         $ids = get_posts([
-            'post_type'      => $enabledTypes,
-            'post_status'    => 'publish',
+            'post_type' => $enabledTypes,
+            'post_status' => 'publish',
             'posts_per_page' => -1,
-            'fields'         => 'ids',
+            'fields' => 'ids',
         ]);
 
         \WP_CLI::log(sprintf('Found %d posts.', count($ids)));
 
-        if (!empty($assoc['dry-run'])) {
+        if (! empty($assoc['dry-run'])) {
             \WP_CLI::success('Dry run — no posts synced.');
+
             return;
         }
 
-        $sync     = new DocumentSync(ApiClient::fromSettings());
+        $sync = new DocumentSync(ApiClient::fromSettings());
         $progress = \WP_CLI\Utils\make_progress_bar('Syncing', count($ids));
 
         foreach ($ids as $postId) {

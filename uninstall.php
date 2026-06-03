@@ -1,8 +1,8 @@
 <?php
+
 /**
  * Removes all data the plugin stored when it is deleted.
  */
-
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
 delete_option('vragenai_settings');

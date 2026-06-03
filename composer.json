@@ -1,5 +1,5 @@
 {
-    "name": "vragen-ai/vragen-ai-wordpress",
+    "name": "swisnl/wp-vragen-ai",
     "description": "Synchronises WordPress content with the vragen.ai knowledge base.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -8,8 +8,11 @@
         "woocommerce/action-scheduler": "^3.8"
     },
     "require-dev": {
+        "brain/monkey": "^2.6",
+        "laravel/pint": "^1.13",
+        "php-stubs/wp-cli-stubs": "^2.10",
         "phpunit/phpunit": "^10.5",
-        "brain/monkey": "^2.6"
+        "szepeviktor/phpstan-wordpress": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -19,13 +22,20 @@
     "autoload-dev": {
         "psr-4": {
             "VragenAI\\Tests\\": "tests/"
-        }
+        },
+        "exclude-from-classmap": [
+            "tests/stubs.php"
+        ]
     },
     "scripts": {
+        "check-style": "pint --test",
+        "check-types": "phpstan",
+        "fix-style": "pint",
         "test": "phpunit"
     },
     "config": {
         "optimize-autoloader": true,
+        "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true
         }

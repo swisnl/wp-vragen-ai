@@ -6,9 +6,9 @@ class Admin
 {
     public function register(): void
     {
-        add_action('admin_menu',                       [$this, 'addMenuPage']);
-        add_action('admin_init',                       [$this, 'registerSettings']);
-        add_action('admin_post_vragenai_bulk_sync',    [$this, 'bulkSync']);
+        add_action('admin_menu', [$this, 'addMenuPage']);
+        add_action('admin_init', [$this, 'registerSettings']);
+        add_action('admin_post_vragenai_bulk_sync', [$this, 'bulkSync']);
     }
 
     public function addMenuPage(): void
@@ -29,6 +29,9 @@ class Admin
         ]);
     }
 
+    /**
+     * @return array{customer: string, token: string, post_types: list<string>}
+     */
     public function sanitizeSettings(mixed $input): array
     {
         $existing = (array) get_option('vragenai_settings', []);
@@ -36,33 +39,33 @@ class Admin
         return [
             // Preserve stored values when a field is submitted empty (e.g. when it
             // is disabled because a wp-config.php constant manages the value).
-            'customer'   => !empty($input['customer'])
+            'customer' => ! empty($input['customer'])
                 ? sanitize_text_field($input['customer'])
-                : ($existing['customer'] ?? ''),
-            'token'      => !empty($input['token'])
+                : (string) ($existing['customer'] ?? ''),
+            'token' => ! empty($input['token'])
                 ? sanitize_text_field($input['token'])
-                : ($existing['token'] ?? ''),
+                : (string) ($existing['token'] ?? ''),
             'post_types' => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
         ];
     }
 
     public function renderSettingsPage(): void
     {
-        $settings       = (array) get_option('vragenai_settings', []);
-        $postTypes      = get_post_types(['public' => true], 'objects');
-        $enabledTypes   = (array) ($settings['post_types'] ?? ['post', 'page']);
+        $settings = (array) get_option('vragenai_settings', []);
+        $postTypes = get_post_types(['public' => true], 'objects');
+        $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
         $customerManaged = defined('VRAGENAI_CUSTOMER');
-        $tokenManaged    = defined('VRAGENAI_TOKEN');
-        $creds          = ApiClient::credentials();
-        $configured     = $creds['customer'] !== '' && $creds['token'] !== '';
-        $connection     = $configured ? $this->checkConnection() : null;
-        $synced         = isset($_GET['synced']) ? (int) $_GET['synced'] : null;
+        $tokenManaged = defined('VRAGENAI_TOKEN');
+        $creds = ApiClient::credentials();
+        $configured = $creds['customer'] !== '' && $creds['token'] !== '';
+        $connection = $configured ? $this->checkConnection() : null;
+        $synced = isset($_GET['synced']) ? (int) $_GET['synced'] : null;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Vragen.ai instellingen', 'vragen-ai'); ?></h1>
 
-            <?php if ($connection !== null) : ?>
-                <?php if (is_wp_error($connection)) : ?>
+            <?php if ($connection !== null) { ?>
+                <?php if (is_wp_error($connection)) { ?>
                     <div class="notice notice-error"><p>
                         <?php echo esc_html(sprintf(
                             /* translators: %s: API error message */
@@ -70,14 +73,14 @@ class Admin
                             $connection->get_error_message()
                         )); ?>
                     </p></div>
-                <?php else : ?>
+                <?php } else { ?>
                     <div class="notice notice-success"><p>
                         <?php esc_html_e('Verbonden met vragen.ai.', 'vragen-ai'); ?>
                     </p></div>
-                <?php endif; ?>
-            <?php endif; ?>
+                <?php } ?>
+            <?php } ?>
 
-            <?php if ($synced !== null) : ?>
+            <?php if ($synced !== null) { ?>
                 <div class="notice notice-success is-dismissible"><p>
                     <?php printf(
                         /* translators: %d: number of posts queued */
@@ -85,7 +88,7 @@ class Admin
                         $synced
                     ); ?>
                 </p></div>
-            <?php endif; ?>
+            <?php } ?>
 
             <form method="post" action="options.php">
                 <?php settings_fields('vragenai'); ?>
@@ -99,11 +102,11 @@ class Admin
                                    value="<?php echo esc_attr($customerManaged ? $creds['customer'] : ($settings['customer'] ?? '')); ?>"
                                    class="regular-text" placeholder="jouw-organisatie"
                                    <?php disabled($customerManaged); ?> />
-                            <?php if ($customerManaged) : ?>
+                            <?php if ($customerManaged) { ?>
                                 <p class="description"><?php esc_html_e('Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php.', 'vragen-ai'); ?></p>
-                            <?php else : ?>
+                            <?php } else { ?>
                                 <p class="description"><?php esc_html_e('Subdomein van {klantnaam}.vragen.ai', 'vragen-ai'); ?></p>
-                            <?php endif; ?>
+                            <?php } ?>
                         </td>
                     </tr>
                     <tr>
@@ -114,20 +117,20 @@ class Admin
                             <input type="password" id="vragenai_token" name="vragenai_settings[token]"
                                    value="" class="regular-text" autocomplete="new-password"
                                    <?php disabled($tokenManaged); ?> />
-                            <?php if ($tokenManaged) : ?>
+                            <?php if ($tokenManaged) { ?>
                                 <p class="description"><?php esc_html_e('Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php.', 'vragen-ai'); ?></p>
-                            <?php elseif (!empty($settings['token'])) : ?>
+                            <?php } elseif (! empty($settings['token'])) { ?>
                                 <p class="description"><?php esc_html_e('Er is een token opgeslagen. Laat dit veld leeg om het te behouden.', 'vragen-ai'); ?></p>
-                            <?php else : ?>
+                            <?php } else { ?>
                                 <p class="description"><?php esc_html_e('Het API-token van vragen.ai.', 'vragen-ai'); ?></p>
-                            <?php endif; ?>
+                            <?php } ?>
                         </td>
                     </tr>
 
                     <tr>
                         <th scope="row"><?php esc_html_e('Te synchroniseren contenttypen', 'vragen-ai'); ?></th>
                         <td>
-                            <?php foreach ($postTypes as $type) : ?>
+                            <?php foreach ($postTypes as $type) { ?>
                                 <label style="display:block;margin-bottom:4px">
                                     <input type="checkbox" name="vragenai_settings[post_types][]"
                                            value="<?php echo esc_attr($type->name); ?>"
@@ -135,7 +138,7 @@ class Admin
                                     <?php echo esc_html($type->labels->singular_name); ?>
                                     (<code><?php echo esc_html($type->name); ?></code>)
                                 </label>
-                            <?php endforeach; ?>
+                            <?php } ?>
                         </td>
                     </tr>
                 </table>
@@ -156,19 +159,19 @@ class Admin
 
     public function bulkSync(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             wp_die(esc_html__('Geen toegang.', 'vragen-ai'));
         }
         check_admin_referer('vragenai_bulk_sync');
 
-        $settings     = (array) get_option('vragenai_settings', []);
+        $settings = (array) get_option('vragenai_settings', []);
         $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
 
         $ids = get_posts([
-            'post_type'      => $enabledTypes,
-            'post_status'    => 'publish',
+            'post_type' => $enabledTypes,
+            'post_status' => 'publish',
             'posts_per_page' => -1,
-            'fields'         => 'ids',
+            'fields' => 'ids',
         ]);
 
         foreach ($ids as $postId) {
@@ -185,20 +188,22 @@ class Admin
     /**
      * Probe the API with the effective credentials to confirm they work.
      * The successful response is cached for an hour, keyed on the credentials.
+     *
+     * @return array<string, mixed>|\WP_Error
      */
     private function checkConnection(): array|\WP_Error
     {
         $creds = ApiClient::credentials();
 
-        $cacheKey = 'vragenai_systems_' . md5($creds['customer'] . '|' . $creds['token']);
-        $cached   = get_transient($cacheKey);
+        $cacheKey = 'vragenai_systems_'.md5($creds['customer'].'|'.$creds['token']);
+        $cached = get_transient($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
 
         $result = ApiClient::fromSettings()->getSystems();
 
-        if (!is_wp_error($result)) {
+        if (! is_wp_error($result)) {
             set_transient($cacheKey, $result, HOUR_IN_SECONDS);
         }
 

@@ -9,7 +9,7 @@ class LanguageResolver
         // WPML
         if (defined('ICL_LANGUAGE_CODE')) {
             $info = apply_filters('wpml_post_language_details', null, $post->ID);
-            if (is_array($info) && !empty($info['language_code'])) {
+            if (is_array($info) && ! empty($info['language_code'])) {
                 return $info['language_code'];
             }
         }
@@ -30,10 +30,10 @@ class LanguageResolver
         // WPML: resolve the original language of a translated post
         if (defined('ICL_LANGUAGE_CODE')) {
             $details = apply_filters('wpml_element_language_details', null, [
-                'element_id'   => $post->ID,
-                'element_type' => 'post_' . $post->post_type,
+                'element_id' => $post->ID,
+                'element_type' => 'post_'.$post->post_type,
             ]);
-            if (is_object($details) && !empty($details->original_language_code)) {
+            if (is_object($details) && ! empty($details->original_language_code)) {
                 return $details->original_language_code;
             }
         }

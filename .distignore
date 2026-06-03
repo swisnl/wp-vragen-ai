@@ -3,15 +3,16 @@
 # before deploy and must ship inside the plugin.
 /.git
 /.github
+/.gitattributes
 /.gitignore
 /.distignore
 /.editorconfig
 /node_modules
+/stubs
 /tests
 /phpunit.xml.dist
 /.phpunit.cache
-/phpcs.xml.dist
-/phpstan.neon
+/phpstan.neon.dist
 /phpstan-baseline.neon
 .DS_Store
 .idea

@@ -10,11 +10,11 @@ use VragenAI\Tests\TestCase;
 
 class ApiClientCredentialsTest extends TestCase
 {
-    public function testFallsBackToStoredOption(): void
+    public function test_falls_back_to_stored_option(): void
     {
         Functions\when('get_option')->justReturn([
             'customer' => 'acme',
-            'token'    => 'stored-token',
+            'token' => 'stored-token',
         ]);
 
         $this->assertSame(
@@ -23,7 +23,7 @@ class ApiClientCredentialsTest extends TestCase
         );
     }
 
-    public function testMissingOptionYieldsEmptyStrings(): void
+    public function test_missing_option_yields_empty_strings(): void
     {
         Functions\when('get_option')->justReturn([]);
 
@@ -35,14 +35,14 @@ class ApiClientCredentialsTest extends TestCase
 
     #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
-    public function testConstantsOverrideStoredOption(): void
+    public function test_constants_override_stored_option(): void
     {
         define('VRAGENAI_CUSTOMER', 'const-customer');
         define('VRAGENAI_TOKEN', 'const-token');
 
         Functions\when('get_option')->justReturn([
             'customer' => 'db-customer',
-            'token'    => 'db-token',
+            'token' => 'db-token',
         ]);
 
         $this->assertSame(
