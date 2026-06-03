@@ -26,7 +26,7 @@ class LanguageResolver
     }
 
     /**
-     * The site's default language. Mirrors Drupal's canonical language: the
+     * The site's default language. The
      * document content is sourced from this language's translation.
      */
     public function getDefaultLanguage(): string
@@ -100,14 +100,6 @@ class LanguageResolver
         $translations = $this->getTranslations($post);
         $default = $this->getDefaultLanguage();
 
-        if (isset($translations[$default])) {
-            return $translations[$default];
-        }
-
-        if ($translations !== []) {
-            return (int) min($translations);
-        }
-
-        return $post->ID;
+        return $translations[$default] ?? (int) min($translations);
     }
 }

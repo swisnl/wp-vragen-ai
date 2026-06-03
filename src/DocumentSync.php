@@ -70,7 +70,7 @@ class DocumentSync
     }
 
     /**
-     * Sync a post immediately, bypassing the queue. Used by WP-CLI and bulk sync.
+     * Sync a post immediately, bypassing the queue.
      */
     public function syncPostDirectly(\WP_Post $post): void
     {

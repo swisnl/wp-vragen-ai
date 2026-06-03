@@ -19,7 +19,6 @@ use VragenAI\DocumentSync;
  */
 defined('ABSPATH') || exit;
 
-define('VRAGENAI_VERSION', '2.0.0');
 define('VRAGENAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 require_once VRAGENAI_PLUGIN_DIR.'vendor/autoload.php';
