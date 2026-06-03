@@ -8,6 +8,8 @@
 /.editorconfig
 /node_modules
 /tests
+/phpunit.xml.dist
+/.phpunit.cache
 /phpcs.xml.dist
 /phpstan.neon
 /phpstan-baseline.neon

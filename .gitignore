@@ -1,6 +1,7 @@
 /vendor/
 /node_modules/
 /build/
+/.phpunit.cache/
 *.zip
 .idea/
 .DS_Store
