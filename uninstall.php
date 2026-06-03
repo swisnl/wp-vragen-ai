@@ -15,8 +15,12 @@ if (function_exists('as_unschedule_all_actions')) {
     as_unschedule_all_actions('vragenai_delete_document');
 }
 
-// Drop the connection-check transients (keyed on a credentials hash).
+// Drop the connection-check transients (keyed on a credentials hash). A direct
+// query is used because the transient names are dynamic, so they cannot be
+// removed with a single delete_transient() call; caching does not apply to a
+// one-off cleanup that runs only on uninstall.
 global $wpdb;
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 $wpdb->query(
     "DELETE FROM {$wpdb->options}
      WHERE option_name LIKE '\_transient\_vragenai\_%'

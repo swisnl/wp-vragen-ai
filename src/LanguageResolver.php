@@ -8,7 +8,7 @@ class LanguageResolver
     {
         // WPML
         if (defined('ICL_LANGUAGE_CODE')) {
-            $info = apply_filters('wpml_post_language_details', null, $post->ID);
+            $info = apply_filters('wpml_post_language_details', null, $post->ID); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML-defined integration hook.
             if (is_array($info) && ! empty($info['language_code'])) {
                 return $info['language_code'];
             }
@@ -33,7 +33,7 @@ class LanguageResolver
     {
         // WPML
         if (defined('ICL_LANGUAGE_CODE')) {
-            $default = apply_filters('wpml_default_language', null);
+            $default = apply_filters('wpml_default_language', null); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML-defined integration hook.
             if (is_string($default) && $default !== '') {
                 return $default;
             }
@@ -62,9 +62,9 @@ class LanguageResolver
         // WPML
         if (defined('ICL_LANGUAGE_CODE')) {
             $type = 'post_'.$post->post_type;
-            $trid = apply_filters('wpml_element_trid', null, $post->ID, $type);
+            $trid = apply_filters('wpml_element_trid', null, $post->ID, $type); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML-defined integration hook.
             if ($trid) {
-                $translations = apply_filters('wpml_get_element_translations', null, $trid, $type);
+                $translations = apply_filters('wpml_get_element_translations', null, $trid, $type); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML-defined integration hook.
                 if (is_array($translations)) {
                     $map = [];
                     foreach ($translations as $translation) {

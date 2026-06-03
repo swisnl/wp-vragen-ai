@@ -242,7 +242,9 @@ class DocumentSync
 
     private function buildContent(\WP_Post $post): string
     {
-        $body = apply_filters('the_content', $post->post_content);
+        // 'the_content' is a WordPress core filter; applying it renders the stored
+        // post content exactly as the front end would before sending it to the API.
+        $body = apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
         // Mirror Drupal: wrap bare inline content in <p> so the API receives valid HTML.
         if (! $this->hasBlockLevelElements($body)) {
@@ -286,7 +288,7 @@ class DocumentSync
     private function logError(string $context, \WP_Error $error): void
     {
         if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-            error_log('[vragen.ai] '.$context.': '.$error->get_error_message());
+            error_log('[vragen.ai] '.$context.': '.$error->get_error_message()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- guarded debug logging, only active when WP_DEBUG_LOG is enabled.
         }
     }
 

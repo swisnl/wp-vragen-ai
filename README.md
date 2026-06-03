@@ -7,7 +7,7 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 ## Features
 
 - Automatic sync on publish/update/trash/delete for the post types you choose.
-- Background processing through Action Scheduler — large sites stay responsive.
+- Background processing through Action Scheduler, large sites stay responsive.
 - Bulk synchronisation of all published content from the settings screen.
 - WP-CLI command (`wp vragenai sync`) for scripted or initial imports.
 - PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
@@ -18,6 +18,25 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 
 - WordPress 6.0+
 - PHP 8.1+
+
+## External services
+This plugin connects to the vragen.ai knowledge base API. This connection is the sole purpose of the plugin: it is required to index your content so it can be searched and answered through vragen.ai. The service is operated by [SWIS](https://swis.nl) on behalf of [Vragen.ai](https://vragen.ai).
+
+The API is reached at the endpoint configured for your account, `https://{customer}.vragen.ai/api/v1` by default (the root domain can be changed with the `VRAGENAI_API_DOMAIN` constant).
+
+When you publish, update, trash or delete content of an enabled post type and when you run a bulk synchronisation the plugin sends the following to that endpoint:
+
+* the post title, public URL and rendered content;
+* metadata: author display name, post type, post format, language(s), publish/modified dates, taxonomy terms and the featured-image URL;
+* the URLs and MIME types of attached PDF files, so vragen.ai can fetch and extract their text server-side (the file contents themselves are not uploaded by the plugin);
+* your configured customer name and API token (sent as a Bearer authorization header).
+
+In addition, while the settings screen is open the plugin contacts the API at most once per hour to verify the connection.
+
+No data is sent until you enter a customer name and API token. The plugin makes no other external requests.
+
+* Service homepage: https://vragen.ai/
+* Privacy Policy: https://vragen.ai/privacy-statement
 
 ## Installation
 

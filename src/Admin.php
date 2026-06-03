@@ -59,7 +59,9 @@ class Admin
         $creds = ApiClient::credentials();
         $configured = $creds['customer'] !== '' && $creds['token'] !== '';
         $connection = $configured ? $this->checkConnection() : null;
-        $synced = isset($_GET['synced']) ? (int) $_GET['synced'] : null;
+        // Display-only flag from our own admin-post redirect after a bulk sync.
+        // It is cast to an int and never used to alter state, so no nonce is required.
+        $synced = isset($_GET['synced']) ? (int) $_GET['synced'] : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Vragen.ai instellingen', 'vragen-ai'); ?></h1>
@@ -82,11 +84,11 @@ class Admin
 
             <?php if ($synced !== null) { ?>
                 <div class="notice notice-success is-dismissible"><p>
-                    <?php printf(
+                    <?php echo esc_html(sprintf(
                         /* translators: %d: number of posts queued */
-                        esc_html__('%d posts in de wachtrij geplaatst voor synchronisatie.', 'vragen-ai'),
+                        __('%d posts in de wachtrij geplaatst voor synchronisatie.', 'vragen-ai'),
                         $synced
-                    ); ?>
+                    )); ?>
                 </p></div>
             <?php } ?>
 
