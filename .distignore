@@ -7,6 +7,7 @@
 /.gitignore
 /.distignore
 /.editorconfig
+/README.md
 /node_modules
 /stubs
 /tests
