@@ -1,12 +1,15 @@
 <?php
 /**
- * Plugin Name: Vragen.ai
- * Description: Synchronises WordPress content with the vragen.ai knowledge base.
- * Version:     2.0.0
- * Author:      SWIS
- * License:     GPL-2.0-or-later
- * Text Domain: vragen-ai
- * Domain Path: /languages
+ * Plugin Name:       Vragen.ai
+ * Description:       Synchronises WordPress content with the vragen.ai knowledge base.
+ * Version:           2.0.0
+ * Requires at least: 6.0
+ * Requires PHP:      8.1
+ * Author:            SWIS
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       vragen-ai
+ * Domain Path:       /languages
  */
 
 defined('ABSPATH') || exit;
