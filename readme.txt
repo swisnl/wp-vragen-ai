@@ -17,7 +17,7 @@ Vragen.ai keeps your WordPress content in sync with a [vragen.ai](https://vragen
 Features:
 
 * Automatic sync on publish/update/trash/delete for the post types you choose.
-* Background processing through Action Scheduler — large sites stay responsive.
+* Background processing through Action Scheduler, large sites stay responsive.
 * Bulk synchronisation of all published content from the settings screen.
 * WP-CLI command (`wp vragenai sync`) for scripted/initial imports.
 * PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
