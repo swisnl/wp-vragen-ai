@@ -34,27 +34,48 @@ class Admin
         $existing = (array) get_option('vragenai_settings', []);
 
         return [
-            'customer'          => sanitize_text_field($input['customer'] ?? ''),
-            // Preserve the stored token when the password field is submitted empty.
-            'token'             => !empty($input['token'])
+            // Preserve stored values when a field is submitted empty (e.g. when it
+            // is disabled because a wp-config.php constant manages the value).
+            'customer'   => !empty($input['customer'])
+                ? sanitize_text_field($input['customer'])
+                : ($existing['customer'] ?? ''),
+            'token'      => !empty($input['token'])
                 ? sanitize_text_field($input['token'])
                 : ($existing['token'] ?? ''),
-            'system_id'         => sanitize_text_field($input['system_id'] ?? ''),
-            'post_types'        => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
-            'language_fallback' => !empty($input['language_fallback']),
+            'post_types' => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
         ];
     }
 
     public function renderSettingsPage(): void
     {
-        $settings     = (array) get_option('vragenai_settings', []);
-        $postTypes    = get_post_types(['public' => true], 'objects');
-        $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
-        $systems      = $this->loadSystems($settings);
-        $synced       = isset($_GET['synced']) ? (int) $_GET['synced'] : null;
+        $settings       = (array) get_option('vragenai_settings', []);
+        $postTypes      = get_post_types(['public' => true], 'objects');
+        $enabledTypes   = (array) ($settings['post_types'] ?? ['post', 'page']);
+        $customerManaged = defined('VRAGENAI_CUSTOMER');
+        $tokenManaged    = defined('VRAGENAI_TOKEN');
+        $creds          = ApiClient::credentials();
+        $configured     = $creds['customer'] !== '' && $creds['token'] !== '';
+        $connection     = $configured ? $this->checkConnection() : null;
+        $synced         = isset($_GET['synced']) ? (int) $_GET['synced'] : null;
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Vragen.ai instellingen', 'vragen-ai'); ?></h1>
+
+            <?php if ($connection !== null) : ?>
+                <?php if (is_wp_error($connection)) : ?>
+                    <div class="notice notice-error"><p>
+                        <?php echo esc_html(sprintf(
+                            /* translators: %s: API error message */
+                            __('Verbinding met vragen.ai mislukt: %s', 'vragen-ai'),
+                            $connection->get_error_message()
+                        )); ?>
+                    </p></div>
+                <?php else : ?>
+                    <div class="notice notice-success"><p>
+                        <?php esc_html_e('Verbonden met vragen.ai.', 'vragen-ai'); ?>
+                    </p></div>
+                <?php endif; ?>
+            <?php endif; ?>
 
             <?php if ($synced !== null) : ?>
                 <div class="notice notice-success is-dismissible"><p>
@@ -75,9 +96,14 @@ class Admin
                         </th>
                         <td>
                             <input type="text" id="vragenai_customer" name="vragenai_settings[customer]"
-                                   value="<?php echo esc_attr($settings['customer'] ?? ''); ?>"
-                                   class="regular-text" placeholder="jouw-organisatie" />
-                            <p class="description"><?php esc_html_e('Subdomein van {klantnaam}.vragen.ai', 'vragen-ai'); ?></p>
+                                   value="<?php echo esc_attr($customerManaged ? $creds['customer'] : ($settings['customer'] ?? '')); ?>"
+                                   class="regular-text" placeholder="jouw-organisatie"
+                                   <?php disabled($customerManaged); ?> />
+                            <?php if ($customerManaged) : ?>
+                                <p class="description"><?php esc_html_e('Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php.', 'vragen-ai'); ?></p>
+                            <?php else : ?>
+                                <p class="description"><?php esc_html_e('Subdomein van {klantnaam}.vragen.ai', 'vragen-ai'); ?></p>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
@@ -86,30 +112,17 @@ class Admin
                         </th>
                         <td>
                             <input type="password" id="vragenai_token" name="vragenai_settings[token]"
-                                   value="<?php echo esc_attr($settings['token'] ?? ''); ?>"
-                                   class="regular-text" autocomplete="new-password" />
+                                   value="" class="regular-text" autocomplete="new-password"
+                                   <?php disabled($tokenManaged); ?> />
+                            <?php if ($tokenManaged) : ?>
+                                <p class="description"><?php esc_html_e('Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php.', 'vragen-ai'); ?></p>
+                            <?php elseif (!empty($settings['token'])) : ?>
+                                <p class="description"><?php esc_html_e('Er is een token opgeslagen. Laat dit veld leeg om het te behouden.', 'vragen-ai'); ?></p>
+                            <?php else : ?>
+                                <p class="description"><?php esc_html_e('Het API-token van vragen.ai.', 'vragen-ai'); ?></p>
+                            <?php endif; ?>
                         </td>
                     </tr>
-
-                    <?php if (!is_wp_error($systems) && !empty($systems['data'])) : ?>
-                    <tr>
-                        <th scope="row">
-                            <label for="vragenai_system_id"><?php esc_html_e('Zoeksysteem', 'vragen-ai'); ?></label>
-                        </th>
-                        <td>
-                            <select id="vragenai_system_id" name="vragenai_settings[system_id]">
-                                <option value=""><?php esc_html_e('— Globaal (geen systeem) —', 'vragen-ai'); ?></option>
-                                <?php foreach ($systems['data'] as $system) : ?>
-                                    <option value="<?php echo esc_attr($system['id']); ?>"
-                                            <?php selected($settings['system_id'] ?? '', $system['id']); ?>>
-                                        <?php echo esc_html($system['attributes']['name'] ?? $system['id']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <p class="description"><?php esc_html_e('Laat leeg om zonder systeem te zoeken.', 'vragen-ai'); ?></p>
-                        </td>
-                    </tr>
-                    <?php endif; ?>
 
                     <tr>
                         <th scope="row"><?php esc_html_e('Te synchroniseren contenttypen', 'vragen-ai'); ?></th>
@@ -123,16 +136,6 @@ class Admin
                                     (<code><?php echo esc_html($type->name); ?></code>)
                                 </label>
                             <?php endforeach; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Taalfallback', 'vragen-ai'); ?></th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="vragenai_settings[language_fallback]" value="1"
-                                       <?php checked(!empty($settings['language_fallback'])); ?> />
-                                <?php esc_html_e('Val terug op de canonieke taal als de voorkeurtaal niet beschikbaar is.', 'vragen-ai'); ?>
-                            </label>
                         </td>
                     </tr>
                 </table>
@@ -179,19 +182,21 @@ class Admin
         exit;
     }
 
-    private function loadSystems(array $settings): array|\WP_Error
+    /**
+     * Probe the API with the effective credentials to confirm they work.
+     * The successful response is cached for an hour, keyed on the credentials.
+     */
+    private function checkConnection(): array|\WP_Error
     {
-        if (empty($settings['customer']) || empty($settings['token'])) {
-            return ['data' => []];
-        }
+        $creds = ApiClient::credentials();
 
-        $cacheKey = 'vragenai_systems_' . md5($settings['customer'] . $settings['token']);
+        $cacheKey = 'vragenai_systems_' . md5($creds['customer'] . '|' . $creds['token']);
         $cached   = get_transient($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
 
-        $result = (new ApiClient($settings['customer'], $settings['token']))->getSystems();
+        $result = ApiClient::fromSettings()->getSystems();
 
         if (!is_wp_error($result)) {
             set_transient($cacheKey, $result, HOUR_IN_SECONDS);

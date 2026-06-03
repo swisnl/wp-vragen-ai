@@ -11,6 +11,30 @@ class ApiClient
         $this->baseUrl = "https://{$customer}.vragen.ai/api/v1";
     }
 
+    /**
+     * Resolve the effective credentials. Constants defined in wp-config.php
+     * (VRAGENAI_CUSTOMER / VRAGENAI_TOKEN) take precedence over the stored
+     * option, so production secrets can live outside the database.
+     *
+     * @return array{customer: string, token: string}
+     */
+    public static function credentials(): array
+    {
+        $settings = (array) get_option('vragenai_settings', []);
+
+        return [
+            'customer' => defined('VRAGENAI_CUSTOMER') ? (string) VRAGENAI_CUSTOMER : (string) ($settings['customer'] ?? ''),
+            'token'    => defined('VRAGENAI_TOKEN') ? (string) VRAGENAI_TOKEN : (string) ($settings['token'] ?? ''),
+        ];
+    }
+
+    public static function fromSettings(): self
+    {
+        $creds = self::credentials();
+
+        return new self($creds['customer'], $creds['token']);
+    }
+
     public function createDocument(array $attributes): array|\WP_Error
     {
         return $this->request('POST', '/documents', [

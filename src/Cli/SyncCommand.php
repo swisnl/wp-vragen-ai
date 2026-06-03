@@ -49,7 +49,7 @@ class SyncCommand
             return;
         }
 
-        $sync     = new DocumentSync(new ApiClient($settings['customer'] ?? '', $settings['token'] ?? ''));
+        $sync     = new DocumentSync(ApiClient::fromSettings());
         $progress = \WP_CLI\Utils\make_progress_bar('Syncing', count($ids));
 
         foreach ($ids as $postId) {
