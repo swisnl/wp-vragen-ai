@@ -1,0 +1,15 @@
+# Files excluded from the WordPress.org package.
+# vendor/ is intentionally NOT listed: it is built with `composer install --no-dev`
+# before deploy and must ship inside the plugin.
+/.git
+/.github
+/.gitignore
+/.distignore
+/.editorconfig
+/node_modules
+/tests
+/phpcs.xml.dist
+/phpstan.neon
+/phpstan-baseline.neon
+.DS_Store
+.idea
