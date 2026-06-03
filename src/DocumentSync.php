@@ -33,7 +33,7 @@ class DocumentSync
             return;
         }
 
-        if ($post->post_status === 'publish') {
+        if ($this->shouldSyncPost($post)) {
             as_schedule_single_action(time(), 'vragenai_sync_post', ['post_id' => $postId], 'vragenai');
         } elseif (in_array($post->post_status, ['trash', 'draft'], true)) {
             // Resolve the translation group now, while the post still exists.
@@ -54,7 +54,7 @@ class DocumentSync
     public function syncPost(int $postId): void
     {
         $post = get_post($postId);
-        if (! $post || $post->post_status !== 'publish') {
+        if (! $post || ! $this->shouldSyncPost($post)) {
             return;
         }
 
@@ -79,28 +79,42 @@ class DocumentSync
 
     private function upsertDocument(\WP_Post $post): void
     {
-        // All translations of a post share one document, keyed on the canonical
-        // (default-language) post. Content is sourced from that translation;
-        // meta_data.languages advertises every language the group is available in.
-        $translations = $this->languageResolver->getTranslations($post);
         $canonicalLanguage = $this->languageResolver->getDefaultLanguage();
-        $canonicalPostId = $this->languageResolver->getCanonicalPostId($post);
+        $translations = [$canonicalLanguage => $post->ID];
+        $source = $post;
+        $externalRef = 'wp_post_'.$post->ID;
 
-        $canonicalPost = get_post($canonicalPostId);
-        $source = ($canonicalPost instanceof \WP_Post && $canonicalPost->post_status === 'publish')
-            ? $canonicalPost
-            : $post;
+        if (! $this->isStandaloneAttachment($post)) {
+            // All translations of a post share one document, keyed on the canonical
+            // (default-language) post. Content is sourced from that translation;
+            // meta_data.languages advertises every language the group is available in.
+            $translations = $this->languageResolver->getTranslations($post);
+            $canonicalPostId = $this->languageResolver->getCanonicalPostId($post);
 
-        $externalRef = 'wp_post_'.$canonicalPostId;
+            $canonicalPost = get_post($canonicalPostId);
+            $source = ($canonicalPost instanceof \WP_Post && $this->shouldSyncPost($canonicalPost))
+                ? $canonicalPost
+                : $post;
+
+            $externalRef = 'wp_post_'.$canonicalPostId;
+        }
+
+        $isAttachment = $this->isStandaloneAttachment($source);
         $author = get_userdata((int) $source->post_author);
-        $attachments = $this->attachmentExtractor->extract($source);
+        $attachments = $isAttachment ? [] : $this->attachmentExtractor->extract($source);
+        $url = $isAttachment ? wp_get_attachment_url($source->ID) : get_permalink($source);
+        $mimeType = $isAttachment ? (get_post_mime_type($source) ?: 'application/octet-stream') : 'text/html';
+
+        if (! is_string($url) || $url === '') {
+            return;
+        }
 
         $attributes = [
             'external_reference' => $externalRef,
-            'url' => get_permalink($source),
-            'mime_type' => 'text/html',
+            'url' => $url,
+            'mime_type' => $mimeType,
             'title' => $source->post_title,
-            'content' => $this->buildContent($source),
+            'attachments' => $attachments,
             'meta_data' => [
                 'author' => $author ? $author->display_name : '',
                 'post_type' => $source->post_type,
@@ -111,9 +125,12 @@ class DocumentSync
                 'modified_at' => $source->post_modified,
                 'taxonomies' => $this->getAllTaxonomyTerms($source),
                 'featured_image_url' => get_the_post_thumbnail_url($source, 'full') ?: '',
-                'attachments' => $attachments,
             ],
         ];
+
+        if (! $isAttachment) {
+            $attributes['content'] = $this->buildContent($source);
+        }
 
         /**
          * Filters the document attributes before they are sent to vragen.ai.
@@ -150,6 +167,17 @@ class DocumentSync
      */
     private function buildRemovalPayload(\WP_Post $post): array
     {
+        if ($this->isStandaloneAttachment($post)) {
+            $defaultLanguage = $this->languageResolver->getDefaultLanguage();
+
+            return [
+                'external_reference' => 'wp_post_'.$post->ID,
+                'language' => $defaultLanguage,
+                'canonical_language' => $defaultLanguage,
+                'remaining_languages' => [],
+            ];
+        }
+
         $translations = $this->languageResolver->getTranslations($post);
         $language = $this->languageResolver->getPostLanguage($post);
 
@@ -260,5 +288,19 @@ class DocumentSync
         if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
             error_log('[vragen.ai] '.$context.': '.$error->get_error_message());
         }
+    }
+
+    private function isStandaloneAttachment(\WP_Post $post): bool
+    {
+        return $post->post_type === 'attachment';
+    }
+
+    private function shouldSyncPost(\WP_Post $post): bool
+    {
+        if ($this->isStandaloneAttachment($post)) {
+            return in_array($post->post_status, ['inherit', 'publish'], true);
+        }
+
+        return $post->post_status === 'publish';
     }
 }

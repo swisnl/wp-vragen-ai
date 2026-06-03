@@ -40,7 +40,7 @@ class SyncCommand
 
         $ids = get_posts([
             'post_type' => $enabledTypes,
-            'post_status' => 'publish',
+            'post_status' => ['publish', 'inherit'],
             'posts_per_page' => -1,
             'fields' => 'ids',
         ]);
