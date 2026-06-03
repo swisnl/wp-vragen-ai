@@ -21,7 +21,7 @@ Features:
 * Bulk synchronisation of all published content from the settings screen.
 * WP-CLI command (`wp vragenai sync`) for scripted/initial imports.
 * PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
-* Language metadata for WPML and Polylang.
+* Multilingual support for WPML and Polylang: all translations of a post are merged into a single document, tagged with every language it is available in.
 * Filters (`vragenai_should_index_post`, `vragenai_document_attributes`) to customise what is indexed.
 
 The admin UI is available in English and Dutch, following your site language.
@@ -53,7 +53,7 @@ No. The plugin sends the file URL to vragen.ai, which crawls and extracts the te
 
 = Does it support multiple languages? =
 
-It sends WPML/Polylang language metadata with each document. Each translation is currently synced as its own document.
+Yes. With WPML or Polylang active, all translations of a post are treated as one piece of content: they are merged into a single vragen.ai document keyed on the default-language (canonical) translation, with the document content taken from that translation and every available language listed in its metadata. Translations are assumed to be semantically equivalent, so only the canonical content is indexed.
 
 == Changelog ==
 
