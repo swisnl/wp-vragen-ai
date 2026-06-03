@@ -41,6 +41,12 @@ For production, you can keep secrets out of the database by defining them in `wp
 
 These constants take precedence over the values stored in the settings screen.
 
+The API is reached at `{customer}.vragen.ai` by default. For staging or self-hosted environments you can change the root domain (the customer name stays the subdomain) by defining:
+
+`define( 'VRAGENAI_API_DOMAIN', 'example.com' );`
+
+With customer `your-organisation` this targets `https://your-organisation.example.com/api/v1`. There is no settings-screen field for this on purpose.
+
 == Frequently Asked Questions ==
 
 = Where do I get a customer name and API token? =

@@ -2,59 +2,103 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Vragen.ai 2.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/vragen-ai\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-03T12:18:55+02:00\n"
+"PO-Revision-Date: 2026-06-03T12:18:55+02:00\n"
 "Language: en_GB\n"
 "X-Domain: vragen-ai\n"
 
+#: src/Admin.php:65
 msgid "Vragen.ai instellingen"
 msgstr "Vragen.ai settings"
 
+#. translators: %s: API error message
+#: src/Admin.php:72
+#, php-format
 msgid "Verbinding met vragen.ai mislukt: %s"
 msgstr "Connection to vragen.ai failed: %s"
 
+#: src/Admin.php:78
 msgid "Verbonden met vragen.ai."
 msgstr "Connected to vragen.ai."
 
+#. translators: %d: number of posts queued
+#: src/Admin.php:87
+#, php-format
 msgid "%d posts in de wachtrij geplaatst voor synchronisatie."
 msgstr "%d posts queued for synchronisation."
 
+#: src/Admin.php:98
 msgid "Klantnaam"
 msgstr "Customer name"
 
+#: src/Admin.php:106
 msgid "Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php."
 msgstr "Set via the VRAGENAI_CUSTOMER constant in wp-config.php."
 
-msgid "Subdomein van {klantnaam}.vragen.ai"
-msgstr "Subdomain of {customer}.vragen.ai"
-
+#: src/Admin.php:118
 msgid "API-token"
 msgstr "API token"
 
+#: src/Admin.php:125
 msgid "Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php."
 msgstr "Set via the VRAGENAI_TOKEN constant in wp-config.php."
 
+#: src/Admin.php:127
 msgid "Er is een token opgeslagen. Laat dit veld leeg om het te behouden."
 msgstr "A token is stored. Leave this field empty to keep it."
 
+#: src/Admin.php:129
 msgid "Het API-token van vragen.ai."
 msgstr "The vragen.ai API token."
 
+#: src/Admin.php:135
 msgid "Te synchroniseren contenttypen"
 msgstr "Content types to synchronise"
 
+#: src/Admin.php:149
 msgid "Instellingen opslaan"
 msgstr "Save settings"
 
+#: src/Admin.php:153
 msgid "Bulk-synchronisatie"
 msgstr "Bulk synchronisation"
 
+#: src/Admin.php:154
 msgid "Synchroniseer alle gepubliceerde content naar vragen.ai. Posts worden via de wachtrij verwerkt."
 msgstr "Synchronise all published content to vragen.ai. Posts are processed via the queue."
 
+#: src/Admin.php:158
 msgid "Bulk-synchronisatie starten"
 msgstr "Start bulk synchronisation"
 
+#: src/Admin.php:167
 msgid "Geen toegang."
 msgstr "Access denied."
+
+#. Plugin Name of the plugin
+#: vragen-ai.php
+#: src/Admin.php:17
+#: src/Admin.php:18
+msgid "Vragen.ai"
+msgstr ""
+
+#. Description of the plugin
+#: vragen-ai.php
+msgid "Synchronises WordPress content with the vragen.ai knowledge base."
+msgstr ""
+
+#. Author of the plugin
+#: vragen-ai.php
+msgid "SWIS"
+msgstr ""
+
+#. translators: %s: API root domain, e.g. vragen.ai
+#: src/Admin.php:110
+#, php-format
+msgid "Subdomein van {klantnaam}.%s"
+msgstr "Subdomain of {customer}.%s"

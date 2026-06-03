@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-03T10:11:13+02:00\n"
+"POT-Creation-Date: 2026-06-03T12:18:54+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: vragen-ai\n"
@@ -31,74 +31,76 @@ msgstr ""
 msgid "SWIS"
 msgstr ""
 
-#: src/Admin.php:62
+#: src/Admin.php:65
 msgid "Vragen.ai instellingen"
 msgstr ""
 
 #. translators: %s: API error message
-#: src/Admin.php:69
+#: src/Admin.php:72
 #, php-format
 msgid "Verbinding met vragen.ai mislukt: %s"
 msgstr ""
 
-#: src/Admin.php:75
+#: src/Admin.php:78
 msgid "Verbonden met vragen.ai."
 msgstr ""
 
 #. translators: %d: number of posts queued
-#: src/Admin.php:84
+#: src/Admin.php:87
 #, php-format
 msgid "%d posts in de wachtrij geplaatst voor synchronisatie."
 msgstr ""
 
-#: src/Admin.php:95
+#: src/Admin.php:98
 msgid "Klantnaam"
 msgstr ""
 
-#: src/Admin.php:103
+#: src/Admin.php:106
 msgid "Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php."
 msgstr ""
 
-#: src/Admin.php:105
-msgid "Subdomein van {klantnaam}.vragen.ai"
-msgstr ""
-
-#: src/Admin.php:111
-msgid "API-token"
+#. translators: %s: API root domain, e.g. vragen.ai
+#: src/Admin.php:110
+#, php-format
+msgid "Subdomein van {klantnaam}.%s"
 msgstr ""
 
 #: src/Admin.php:118
+msgid "API-token"
+msgstr ""
+
+#: src/Admin.php:125
 msgid "Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php."
 msgstr ""
 
-#: src/Admin.php:120
+#: src/Admin.php:127
 msgid "Er is een token opgeslagen. Laat dit veld leeg om het te behouden."
 msgstr ""
 
-#: src/Admin.php:122
+#: src/Admin.php:129
 msgid "Het API-token van vragen.ai."
 msgstr ""
 
-#: src/Admin.php:128
+#: src/Admin.php:135
 msgid "Te synchroniseren contenttypen"
 msgstr ""
 
-#: src/Admin.php:142
+#: src/Admin.php:149
 msgid "Instellingen opslaan"
 msgstr ""
 
-#: src/Admin.php:146
+#: src/Admin.php:153
 msgid "Bulk-synchronisatie"
 msgstr ""
 
-#: src/Admin.php:147
+#: src/Admin.php:154
 msgid "Synchroniseer alle gepubliceerde content naar vragen.ai. Posts worden via de wachtrij verwerkt."
 msgstr ""
 
-#: src/Admin.php:151
+#: src/Admin.php:158
 msgid "Bulk-synchronisatie starten"
 msgstr ""
 
-#: src/Admin.php:160
+#: src/Admin.php:167
 msgid "Geen toegang."
 msgstr ""

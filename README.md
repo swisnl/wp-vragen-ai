@@ -36,6 +36,16 @@ define( 'VRAGENAI_CUSTOMER', 'your-organisation' );
 define( 'VRAGENAI_TOKEN', 'your-api-token' );
 ```
 
+### Pointing at another environment
+
+The API is reached at `{customer}.vragen.ai` by default. For staging or self-hosted instances you can override the root domain (the customer name remains the subdomain) — there is deliberately no admin UI field for this:
+
+```php
+define( 'VRAGENAI_API_DOMAIN', 'example.com' );
+```
+
+With customer `your-organisation` this targets `https://your-organisation.example.com/api/v1`.
+
 ## Multilingual model
 
 With WPML or Polylang active, all translations of a post are treated as **one** piece of content: they are merged into a single vragen.ai document keyed on the default-language (canonical) translation. The document content is taken from that translation, and every available language is listed in its metadata.

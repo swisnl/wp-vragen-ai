@@ -28,16 +28,21 @@ class ApiClient
         ];
     }
 
+    /**
+     * The API root domain. The customer is always a subdomain of it. Defaults
+     * to vragen.ai; VRAGENAI_API_DOMAIN overrides it for staging or self-hosted
+     * environments. There is no admin UI for this on purpose.
+     */
+    public static function domain(): string
+    {
+        return defined('VRAGENAI_API_DOMAIN') ? (string) VRAGENAI_API_DOMAIN : 'vragen.ai';
+    }
+
     public static function fromSettings(): self
     {
         $creds = self::credentials();
 
-        // The customer is always a subdomain of the API root domain. The root
-        // defaults to vragen.ai; VRAGENAI_API_DOMAIN overrides it for staging
-        // or self-hosted environments. There is no admin UI for this on purpose.
-        $domain = defined('VRAGENAI_API_DOMAIN') ? (string) VRAGENAI_API_DOMAIN : 'vragen.ai';
-
-        return new self($creds['customer'], $creds['token'], $domain);
+        return new self($creds['customer'], $creds['token'], self::domain());
     }
 
     /**

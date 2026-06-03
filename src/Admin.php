@@ -105,7 +105,11 @@ class Admin
                             <?php if ($customerManaged) { ?>
                                 <p class="description"><?php esc_html_e('Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php.', 'vragen-ai'); ?></p>
                             <?php } else { ?>
-                                <p class="description"><?php esc_html_e('Subdomein van {klantnaam}.vragen.ai', 'vragen-ai'); ?></p>
+                                <p class="description"><?php echo esc_html(sprintf(
+                                    /* translators: %s: API root domain, e.g. vragen.ai */
+                                    __('Subdomein van {klantnaam}.%s', 'vragen-ai'),
+                                    ApiClient::domain()
+                                )); ?></p>
                             <?php } ?>
                         </td>
                     </tr>
