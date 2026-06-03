@@ -1,0 +1,60 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Vragen.ai 2.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/vragen-ai\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"X-Domain: vragen-ai\n"
+
+msgid "Vragen.ai instellingen"
+msgstr "Vragen.ai settings"
+
+msgid "Verbinding met vragen.ai mislukt: %s"
+msgstr "Connection to vragen.ai failed: %s"
+
+msgid "Verbonden met vragen.ai."
+msgstr "Connected to vragen.ai."
+
+msgid "%d posts in de wachtrij geplaatst voor synchronisatie."
+msgstr "%d posts queued for synchronisation."
+
+msgid "Klantnaam"
+msgstr "Customer name"
+
+msgid "Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php."
+msgstr "Set via the VRAGENAI_CUSTOMER constant in wp-config.php."
+
+msgid "Subdomein van {klantnaam}.vragen.ai"
+msgstr "Subdomain of {customer}.vragen.ai"
+
+msgid "API-token"
+msgstr "API token"
+
+msgid "Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php."
+msgstr "Set via the VRAGENAI_TOKEN constant in wp-config.php."
+
+msgid "Er is een token opgeslagen. Laat dit veld leeg om het te behouden."
+msgstr "A token is stored. Leave this field empty to keep it."
+
+msgid "Het API-token van vragen.ai."
+msgstr "The vragen.ai API token."
+
+msgid "Te synchroniseren contenttypen"
+msgstr "Content types to synchronise"
+
+msgid "Instellingen opslaan"
+msgstr "Save settings"
+
+msgid "Bulk-synchronisatie"
+msgstr "Bulk synchronisation"
+
+msgid "Synchroniseer alle gepubliceerde content naar vragen.ai. Posts worden via de wachtrij verwerkt."
+msgstr "Synchronise all published content to vragen.ai. Posts are processed via the queue."
+
+msgid "Bulk-synchronisatie starten"
+msgstr "Start bulk synchronisation"
+
+msgid "Geen toegang."
+msgstr "Access denied."

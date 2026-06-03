@@ -24,7 +24,7 @@ Features:
 * Language metadata for WPML and Polylang.
 * Filters (`vragenai_should_index_post`, `vragenai_document_attributes`) to customise what is indexed.
 
-The admin UI is currently in Dutch.
+The admin UI is available in English and Dutch, following your site language.
 
 == Installation ==
 
