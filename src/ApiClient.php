@@ -6,9 +6,9 @@ class ApiClient
 {
     private string $baseUrl;
 
-    public function __construct(string $customer, private readonly string $token)
+    public function __construct(string $customer, private readonly string $token, string $domain = 'vragen.ai')
     {
-        $this->baseUrl = "https://{$customer}.vragen.ai/api/v1";
+        $this->baseUrl = "https://{$customer}.{$domain}/api/v1";
     }
 
     /**
@@ -32,7 +32,12 @@ class ApiClient
     {
         $creds = self::credentials();
 
-        return new self($creds['customer'], $creds['token']);
+        // The customer is always a subdomain of the API root domain. The root
+        // defaults to vragen.ai; VRAGENAI_API_DOMAIN overrides it for staging
+        // or self-hosted environments. There is no admin UI for this on purpose.
+        $domain = defined('VRAGENAI_API_DOMAIN') ? (string) VRAGENAI_API_DOMAIN : 'vragen.ai';
+
+        return new self($creds['customer'], $creds['token'], $domain);
     }
 
     /**
