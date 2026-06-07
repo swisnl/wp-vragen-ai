@@ -27,9 +27,12 @@ require_once VRAGENAI_PLUGIN_DIR.'vendor/autoload.php';
 // file must be required so as_schedule_single_action() and friends are defined.
 require_once VRAGENAI_PLUGIN_DIR.'vendor/woocommerce/action-scheduler/action-scheduler.php';
 
-add_action('plugins_loaded', static function (): void {
+// Kept for WP 6.0–6.6, which don't auto-load bundled translations, this runs on init to avoid the 6.7+ early-load notice.
+add_action('init', static function (): void {
     load_plugin_textdomain('vragen-ai', false, dirname(plugin_basename(__FILE__)).'/languages');
+});
 
+add_action('plugins_loaded', static function (): void {
     (new DocumentSync(ApiClient::fromSettings()))->register();
 
     if (is_admin()) {
