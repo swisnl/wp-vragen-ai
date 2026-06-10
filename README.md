@@ -12,6 +12,7 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 - WP-CLI command (`wp vragenai sync`) for scripted or initial imports.
 - PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
 - Multilingual support for WPML and Polylang.
+- Embed a vragen.ai deployment (page, popup or popover) with the **Vragen.ai** block, or load one site-wide from the settings screen.
 - Filters (`vragenai_should_index_post`, `vragenai_document_attributes`) to customise what is indexed.
 
 ## Requirements
@@ -70,6 +71,28 @@ With customer `your-organisation` this targets `https://your-organisation.exampl
 With WPML or Polylang active, all translations of a post are treated as **one** piece of content: they are merged into a single vragen.ai document keyed on the default-language (canonical) translation. The document content is taken from that translation, and every available language is listed in its metadata.
 
 Translations are assumed to be semantically equivalent, so only the canonical content is indexed; vragen.ai's semantic layer plus a language filter handle per-language retrieval.
+
+## Embedding Vragen.ai
+
+Besides syncing content, the plugin can embed a Vragen.ai deployment on your site:
+
+- **Vragen.ai embed block** — add the block to any post or page and pick a deployment from the dropdown. The build type (page, popup or popover) comes from the deployment itself. You can place multiple embeds on one page.
+- **Site-wide embed** — choose a popup or popover deployment under **Settings → Vragen.ai** to load it on every page.
+
+The embed host is derived from your configured customer and `VRAGENAI_API_DOMAIN`, so you only choose the deployment.
+
+### Content Security Policy
+
+The embed loads a script from your Vragen.ai instance and makes API calls to it. If your site sends a strict CSP, allow your Vragen.ai domain:
+
+```
+script-src  'self' https://vragen.ai https://*.vragen.ai;
+connect-src 'self' https://vragen.ai https://*.vragen.ai;
+img-src     'self' data: https://vragen.ai https://*.vragen.ai;
+style-src   'self' 'unsafe-inline';
+```
+
+`*.vragen.ai` does not match the bare `vragen.ai`, so include both. If you set `VRAGENAI_API_DOMAIN`, allow that domain instead.
 
 ## Development
 

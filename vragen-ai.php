@@ -4,6 +4,7 @@ use VragenAI\Admin;
 use VragenAI\ApiClient;
 use VragenAI\Cli\SyncCommand;
 use VragenAI\DocumentSync;
+use VragenAI\Embed;
 
 /**
  * Plugin Name:       Vragen.ai
@@ -20,6 +21,7 @@ use VragenAI\DocumentSync;
 defined('ABSPATH') || exit;
 
 define('VRAGENAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('VRAGENAI_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 require_once VRAGENAI_PLUGIN_DIR.'vendor/autoload.php';
 
@@ -34,6 +36,7 @@ add_action('init', static function (): void {
 
 add_action('plugins_loaded', static function (): void {
     (new DocumentSync(ApiClient::fromSettings()))->register();
+    (new Embed)->register();
 
     if (is_admin()) {
         (new Admin)->register();

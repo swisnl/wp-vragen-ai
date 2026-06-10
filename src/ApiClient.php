@@ -98,6 +98,14 @@ class ApiClient
     }
 
     /**
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function getDeployments(): array|\WP_Error
+    {
+        return $this->request('GET', '/deployments');
+    }
+
+    /**
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>|\WP_Error
      */

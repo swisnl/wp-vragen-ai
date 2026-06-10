@@ -30,7 +30,7 @@ class Admin
     }
 
     /**
-     * @return array{customer: string, token: string, post_types: list<string>}
+     * @return array{customer: string, token: string, post_types: list<string>, global_embed_deployment: string}
      */
     public function sanitizeSettings(mixed $input): array
     {
@@ -46,7 +46,31 @@ class Admin
                 ? sanitize_text_field($input['token'])
                 : (string) ($existing['token'] ?? ''),
             'post_types' => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
+            // Deployment slug for the optional site-wide embed; empty disables it.
+            'global_embed_deployment' => $this->sanitizeGlobalEmbed($input['global_embed_deployment'] ?? ''),
         ];
+    }
+
+    /**
+     * Sanitize the site-wide embed slug. When the deployment list is available,
+     * only overlay (popup/popover) build types are allowed — a page-type
+     * deployment makes no sense site-wide. Unknown slugs (list unavailable) pass
+     * through so the feature still works when the API can't be reached.
+     */
+    private function sanitizeGlobalEmbed(mixed $value): string
+    {
+        $slug = (string) preg_replace('/[^A-Za-z0-9_-]/', '', (string) $value);
+        if ($slug === '') {
+            return '';
+        }
+
+        foreach (Embed::deploymentList() as $deployment) {
+            if ($deployment['slug'] === $slug) {
+                return in_array($deployment['build_type'], Embed::GLOBAL_BUILD_TYPES, true) ? $slug : '';
+            }
+        }
+
+        return $slug;
     }
 
     public function renderSettingsPage(): void
@@ -62,6 +86,9 @@ class Admin
         // Display-only flag from our own admin-post redirect after a bulk sync.
         // It is cast to an int and never used to alter state, so no nonce is required.
         $synced = isset($_GET['synced']) ? (int) $_GET['synced'] : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $globalSlug = (string) ($settings['global_embed_deployment'] ?? '');
+        // Only overlay (popup/popover) deployments may be loaded site-wide.
+        $globalDeployments = $configured ? Embed::deploymentList(Embed::GLOBAL_BUILD_TYPES) : [];
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Vragen.ai instellingen', 'vragen-ai'); ?></h1>
@@ -145,6 +172,29 @@ class Admin
                                     (<code><?php echo esc_html($type->name); ?></code>)
                                 </label>
                             <?php } ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="vragenai_global_embed"><?php esc_html_e('Globale embed', 'vragen-ai'); ?></label>
+                        </th>
+                        <td>
+                            <?php if ($globalDeployments !== []) { ?>
+                                <select id="vragenai_global_embed" name="vragenai_settings[global_embed_deployment]">
+                                    <option value=""><?php esc_html_e('— Geen —', 'vragen-ai'); ?></option>
+                                    <?php foreach ($globalDeployments as $deployment) { ?>
+                                        <option value="<?php echo esc_attr($deployment['slug']); ?>" <?php selected($globalSlug, $deployment['slug']); ?>>
+                                            <?php echo esc_html($deployment['name'].' ('.$deployment['build_type'].')'); ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            <?php } else { ?>
+                                <input type="text" id="vragenai_global_embed" name="vragenai_settings[global_embed_deployment]"
+                                       value="<?php echo esc_attr($globalSlug); ?>"
+                                       class="regular-text" placeholder="my-deployment" />
+                            <?php } ?>
+                            <p class="description"><?php esc_html_e('Optioneel. Laadt een popup- of popover-deployment site-breed. Laat leeg om uit te schakelen. Gebruik voor pagina-embeds het blok "Vragen.ai embed".', 'vragen-ai'); ?></p>
                         </td>
                     </tr>
                 </table>

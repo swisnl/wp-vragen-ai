@@ -1,0 +1,36 @@
+{
+    "translation-revision-date": "2026-06-03T12:18:55+02:00",
+    "generator": "WP-CLI\/2.12.0",
+    "source": "blocks\/embed\/edit.js",
+    "domain": "messages",
+    "locale_data": {
+        "messages": {
+            "": {
+                "domain": "messages",
+                "lang": "en_US",
+                "plural-forms": "nplurals=2; plural=(n != 1);"
+            },
+            "Selecteer een deployment\u2026": [
+                "Select a deployment\u2026"
+            ],
+            "Deployment": [
+                "Deployment"
+            ],
+            "Deployment-slug": [
+                "Deployment slug"
+            ],
+            "Kon de lijst met deployments niet laden. Voer de slug handmatig in.": [
+                "Could not load the list of deployments. Enter the slug manually."
+            ],
+            "Voer de deployment-slug handmatig in.": [
+                "Enter the deployment slug manually."
+            ],
+            "Vragen.ai embed": [
+                "Vragen.ai embed"
+            ],
+            "Kies de Vragen.ai-deployment om in te sluiten. Het build-type (pagina, popup of popover) komt uit de deployment zelf.": [
+                "Choose the Vragen.ai deployment to embed. The build type (page, popup or popover) comes from the deployment itself."
+            ]
+        }
+    }
+}
