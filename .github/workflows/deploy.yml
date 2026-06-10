@@ -27,6 +27,17 @@ jobs:
       - name: Install production dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
 
+      - name: Debug SVN secret availability
+        run: |
+          echo "Username length: ${#SVN_USERNAME}"
+          echo "Password length: ${#SVN_PASSWORD}"
+          echo "Plugin slug: $SLUG"
+          svn info "https://plugins.svn.wordpress.org/${SLUG}/"
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: vragen-ai
+
       - name: WordPress.org plugin deploy
         id: deploy
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # stable
