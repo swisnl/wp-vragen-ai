@@ -3,6 +3,7 @@
 # before deploy and must ship inside the plugin.
 /.git
 /.github
+/.wordpress-org
 /.gitattributes
 /.gitignore
 /.distignore
@@ -15,5 +16,7 @@
 /.phpunit.cache
 /phpstan.neon.dist
 /phpstan-baseline.neon
+/composer.json
+/composer.lock
 .DS_Store
 .idea
