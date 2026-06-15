@@ -4,6 +4,13 @@ namespace VragenAI;
 
 class ApiClient
 {
+    /**
+     * Timeout (seconds) for read-path calls made while rendering a page.
+     * Shorter than the sync default so a slow API degrades to native search
+     * or an empty related list instead of stalling the request.
+     */
+    public const SEARCH_TIMEOUT = 8;
+
     private string $baseUrl;
 
     public function __construct(string $customer, private readonly string $token, string $domain = 'vragen.ai')
@@ -97,10 +104,51 @@ class ApiClient
     }
 
     /**
+     * Semantic document search. Returns a JSON:API collection of
+     * `semantic-searchables`; request external_reference + metadata_fields so
+     * results can be mapped back to WordPress posts.
+     *
+     * @param  array<string, mixed>  $params  Query args (query, page[offset], page[limit], filter, …).
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function searchDocuments(array $params): array|\WP_Error
+    {
+        return $this->get('/documents/search', $params, self::SEARCH_TIMEOUT);
+    }
+
+    /**
+     * "More like this" for a single document, seeded by its external reference.
+     *
+     * @param  array<string, mixed>  $params  Extra query args (page[limit], filter, …).
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function similarDocuments(string $externalReference, array $params = []): array|\WP_Error
+    {
+        $params['query'] = $externalReference;
+
+        return $this->get('/documents/similar', $params, self::SEARCH_TIMEOUT);
+    }
+
+    /**
+     * Issue a GET request, appending $params as a query string.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>|\WP_Error
+     */
+    private function get(string $path, array $params, int $timeout = 15): array|\WP_Error
+    {
+        if ($params !== []) {
+            $path .= '?'.http_build_query($params);
+        }
+
+        return $this->request('GET', $path, [], $timeout);
+    }
+
+    /**
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>|\WP_Error
      */
-    private function request(string $method, string $path, array $body = []): array|\WP_Error
+    private function request(string $method, string $path, array $body = [], int $timeout = 15): array|\WP_Error
     {
         $args = [
             'method' => $method,
@@ -109,7 +157,7 @@ class ApiClient
                 'Accept' => 'application/vnd.api+json',
                 'Content-Type' => 'application/vnd.api+json',
             ],
-            'timeout' => 15,
+            'timeout' => $timeout,
         ];
 
         if ($body !== []) {

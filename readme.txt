@@ -23,7 +23,9 @@ Features:
 * PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
 * Multilingual support for WPML and Polylang: all translations of a post are merged into a single document, tagged with every language it is available in.
 * Embed a vragen.ai deployment (page, popup or popover) with the Vragen.ai block, or load one site-wide from the settings screen.
-* Filters (`vragenai_should_index_post`, `vragenai_document_attributes`) to customise what is indexed.
+* Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
+* Show related content for the current post with the Vragen.ai related-content block or the `[vragenai_related]` shortcode.
+* Filters (`vragenai_should_index_post`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 The admin UI is available in English and Dutch, following your site language.
 
@@ -81,6 +83,14 @@ No. The plugin sends the file URL to vragen.ai, which crawls and extracts the te
 = Does it support multiple languages? =
 
 Yes. With WPML or Polylang active, all translations of a post are treated as one piece of content: they are merged into a single vragen.ai document keyed on the default-language (canonical) translation, with the document content taken from that translation and every available language listed in its metadata. Translations are assumed to be semantically equivalent, so only the canonical content is indexed.
+
+= Can I use vragen.ai for the site's own search? =
+
+Yes. On **Settings → Vragen.ai**, enable replacing the native search. Your theme's existing search page, results template and search widget then return semantic results from vragen.ai, ordered by relevance, with pagination preserved. Only synced content is searchable. If the API is unavailable or times out, the plugin falls back to WordPress' built-in search so the site never loses search.
+
+= How do I show related content? =
+
+Add the **Vragen.ai gerelateerde content** block to a post or template, or use the `[vragenai_related]` shortcode. It lists content semantically related to the current post (excluding the post itself). The post must already be synced to vragen.ai.
 
 = The embed doesn't appear on a site with a Content Security Policy (CSP)? =
 

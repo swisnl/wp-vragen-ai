@@ -52,4 +52,30 @@ class LanguageResolverTest extends TestCase
         // post that triggered resolution.
         $this->assertSame(10, $resolver->getCanonicalPostId($post));
     }
+
+    public function test_current_language_falls_back_to_locale(): void
+    {
+        Functions\when('get_locale')->justReturn('nl_NL');
+
+        $this->assertSame('nl_NL', (new LanguageResolver)->getCurrentLanguage());
+    }
+
+    public function test_translation_in_language_resolves_within_group(): void
+    {
+        Functions\when('get_locale')->justReturn('nl_NL');
+        Functions\when('get_post')->justReturn(new \WP_Post(['ID' => 10]));
+
+        $resolver = new LanguageResolver;
+
+        // Monolingual group: only the site locale maps; other languages miss.
+        $this->assertSame(10, $resolver->getTranslationInLanguage(10, 'nl_NL'));
+        $this->assertNull($resolver->getTranslationInLanguage(10, 'en_US'));
+    }
+
+    public function test_translation_in_language_returns_null_for_missing_post(): void
+    {
+        Functions\when('get_post')->justReturn(null);
+
+        $this->assertNull((new LanguageResolver)->getTranslationInLanguage(999, 'nl_NL'));
+    }
 }

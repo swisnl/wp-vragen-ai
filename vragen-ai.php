@@ -5,6 +5,9 @@ use VragenAI\ApiClient;
 use VragenAI\Cli\SyncCommand;
 use VragenAI\DocumentSync;
 use VragenAI\Embed;
+use VragenAI\Search\NativeSearch;
+use VragenAI\Search\Related;
+use VragenAI\Search\SearchService;
 
 /**
  * Plugin Name:       Vragen.ai
@@ -34,6 +37,8 @@ add_action('init', static function (): void {
 add_action('plugins_loaded', static function (): void {
     (new DocumentSync(ApiClient::fromSettings()))->register();
     (new Embed)->register();
+    (new NativeSearch(new SearchService(ApiClient::fromSettings())))->register();
+    (new Related(new SearchService(ApiClient::fromSettings())))->register();
 
     if (is_admin()) {
         (new Admin)->register();

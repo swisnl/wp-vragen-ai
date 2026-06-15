@@ -1,0 +1,44 @@
+.vragenai-related__heading {
+	margin: 0 0 0.5em;
+}
+
+.vragenai-related__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.vragenai-related__item + .vragenai-related__item {
+	margin-top: 0.5em;
+}
+
+/* Cards layout */
+.vragenai-related__list--cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 1.5em;
+}
+
+.vragenai-related__card-link {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	height: 100%;
+	text-decoration: none;
+}
+
+.vragenai-related__image {
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	border-radius: 4px;
+}
+
+.vragenai-related__card-title {
+	font-weight: 600;
+}
+
+.vragenai-related__excerpt {
+	font-size: 0.875em;
+	opacity: 0.8;
+}

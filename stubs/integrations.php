@@ -32,3 +32,8 @@ function pll_get_post_translations(int $post_id): array {}
  * Polylang: get the default language of the site.
  */
 function pll_default_language(string $field = 'slug'): string|false {}
+
+/**
+ * Polylang: get the language of the current request.
+ */
+function pll_current_language(string $field = 'slug'): string|false {}

@@ -30,7 +30,7 @@ class Admin
     }
 
     /**
-     * @return array{customer: string, token: string, post_types: list<string>, global_embed_deployment: string}
+     * @return array{customer: string, token: string, post_types: list<string>, global_embed_deployment: string, replace_native_search: bool, search_language_fallback: bool, search_max_distance: string, search_alpha: string}
      */
     public function sanitizeSettings(mixed $input): array
     {
@@ -45,7 +45,25 @@ class Admin
                 : (string) ($existing['token'] ?? ''),
             'post_types' => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
             'global_embed_deployment' => $this->sanitizeGlobalEmbed($input['global_embed_deployment'] ?? ''),
+            'replace_native_search' => ! empty($input['replace_native_search']),
+            'search_language_fallback' => ! empty($input['search_language_fallback']),
+            'search_max_distance' => $this->sanitizeUnitInterval($input['search_max_distance'] ?? ''),
+            'search_alpha' => $this->sanitizeUnitInterval($input['search_alpha'] ?? ''),
         ];
+    }
+
+    /**
+     * Clamp an optional 0–1 ratio (maxDistance, alpha) to the API's range.
+     * Returns an empty string (use the API default / no constraint) when left
+     * blank or non-numeric.
+     */
+    private function sanitizeUnitInterval(mixed $value): string
+    {
+        if (! is_numeric($value)) {
+            return '';
+        }
+
+        return (string) max(0.0, min(1.0, (float) $value));
     }
 
     /**
@@ -189,6 +207,47 @@ class Admin
                                        class="regular-text" placeholder="my-deployment" />
                             <?php } ?>
                             <p class="description"><?php esc_html_e('Optioneel. Laadt een popup- of popover-deployment site-breed. Laat leeg om uit te schakelen. Gebruik voor pagina-embeds het blok "Vragen.ai embed".', 'vragen-ai'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Zoeken', 'vragen-ai'); ?></th>
+                        <td>
+                            <label style="display:block;margin-bottom:4px">
+                                <input type="checkbox" name="vragenai_settings[replace_native_search]" value="1"
+                                       <?php checked(! empty($settings['replace_native_search'])); ?> />
+                                <?php esc_html_e('Vervang de standaard WordPress-zoekfunctie door semantisch zoeken via vragen.ai.', 'vragen-ai'); ?>
+                            </label>
+                            <label style="display:block;margin-bottom:4px">
+                                <input type="checkbox" name="vragenai_settings[search_language_fallback]" value="1"
+                                       <?php checked((bool) ($settings['search_language_fallback'] ?? true)); ?> />
+                                <?php esc_html_e('Taalfallback: toon resultaten in de standaardtaal als er geen vertaling in de huidige taal bestaat.', 'vragen-ai'); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('Alleen gesynchroniseerde content is doorzoekbaar. Bij een fout of time-out valt het zoeken automatisch terug op de standaardzoekfunctie van WordPress.', 'vragen-ai'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="vragenai_max_distance"><?php esc_html_e('Maximale semantische afstand', 'vragen-ai'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="vragenai_max_distance" name="vragenai_settings[search_max_distance]"
+                                   min="0" max="1" step="0.05" class="small-text"
+                                   value="<?php echo esc_attr((string) ($settings['search_max_distance'] ?? '')); ?>" />
+                            <p class="description"><?php esc_html_e('Optioneel (0–1). Filtert resultaten met een te grote semantische afstand weg; lager is strenger. Laat leeg voor geen limiet.', 'vragen-ai'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="vragenai_alpha"><?php esc_html_e('Alpha (semantisch vs. trefwoord)', 'vragen-ai'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="vragenai_alpha" name="vragenai_settings[search_alpha]"
+                                   min="0" max="1" step="0.05" class="small-text"
+                                   value="<?php echo esc_attr((string) ($settings['search_alpha'] ?? '')); ?>" />
+                            <p class="description"><?php esc_html_e('Optioneel (0–1). Weegt hybride zoeken: 1 = puur semantisch, 0 = puur op trefwoorden. Laat leeg voor de standaard van vragen.ai.', 'vragen-ai'); ?></p>
                         </td>
                     </tr>
                 </table>

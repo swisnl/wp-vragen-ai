@@ -13,7 +13,9 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 - PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
 - Multilingual support for WPML and Polylang.
 - Embed a vragen.ai deployment (page, popup or popover) with the **Vragen.ai** block, or load one site-wide from the settings screen.
-- Filters (`vragenai_should_index_post`, `vragenai_document_attributes`) to customise what is indexed.
+- Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
+- Show related content for the current post with the **Vragen.ai related content** block or the `[vragenai_related]` shortcode.
+- Filters (`vragenai_should_index_post`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 ## Requirements
 
