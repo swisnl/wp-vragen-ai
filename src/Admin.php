@@ -37,8 +37,6 @@ class Admin
         $existing = (array) get_option('vragenai_settings', []);
 
         return [
-            // Preserve stored values when a field is submitted empty (e.g. when it
-            // is disabled because a wp-config.php constant manages the value).
             'customer' => ! empty($input['customer'])
                 ? sanitize_text_field($input['customer'])
                 : (string) ($existing['customer'] ?? ''),
@@ -46,7 +44,6 @@ class Admin
                 ? sanitize_text_field($input['token'])
                 : (string) ($existing['token'] ?? ''),
             'post_types' => array_map('sanitize_key', (array) ($input['post_types'] ?? [])),
-            // Deployment slug for the optional site-wide embed; empty disables it.
             'global_embed_deployment' => $this->sanitizeGlobalEmbed($input['global_embed_deployment'] ?? ''),
         ];
     }
@@ -83,11 +80,8 @@ class Admin
         $creds = ApiClient::credentials();
         $configured = $creds['customer'] !== '' && $creds['token'] !== '';
         $connection = $configured ? $this->checkConnection() : null;
-        // Display-only flag from our own admin-post redirect after a bulk sync.
-        // It is cast to an int and never used to alter state, so no nonce is required.
         $synced = isset($_GET['synced']) ? (int) $_GET['synced'] : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $globalSlug = (string) ($settings['global_embed_deployment'] ?? '');
-        // Only overlay (popup/popover) deployments may be loaded site-wide.
         $globalDeployments = $configured ? Embed::deploymentList(Embed::GLOBAL_BUILD_TYPES) : [];
         ?>
         <div class="wrap">

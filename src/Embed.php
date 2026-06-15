@@ -2,15 +2,9 @@
 
 namespace VragenAI;
 
-/**
- * Renders Vragen.ai deployment embeds: a Gutenberg block for in-content
- * (page) embeds, and an optional site-wide injection for popup/popover
- * deployments. Both reuse the public embed.js loader; only the deployment
- * slug is needed, the build type is resolved by Vragen.ai itself.
- */
 class Embed
 {
-    /** Build types that float over the page and suit a site-wide (global) embed. */
+    /** @var list<string> */
     public const GLOBAL_BUILD_TYPES = ['popup', 'popover'];
 
     public function register(): void
@@ -30,11 +24,6 @@ class Embed
         ]);
     }
 
-    /**
-     * Proxy the Vragen.ai deployments list to the block editor so the API token
-     * stays server-side. Returns a slimmed list; an empty array on any failure
-     * lets the editor fall back to manual slug entry. Cached briefly per account.
-     */
     public function restDeployments(): \WP_REST_Response
     {
         return new \WP_REST_Response(self::deploymentList(), 200);
@@ -93,8 +82,6 @@ class Embed
 
     public function registerBlock(): void
     {
-        // Registered as handles (not file: refs) so the no-build editor script
-        // can declare its wp.* dependencies explicitly.
         $assetVersion = static function (string $file): string {
             $path = VRAGENAI_PLUGIN_DIR.'blocks/embed/'.$file;
 
@@ -130,7 +117,6 @@ class Embed
         $slug = $this->sanitizeSlug((string) ($attributes['deployment'] ?? ''));
 
         if ($slug === '') {
-            // Hint authors in the editor/preview; render nothing for visitors.
             return current_user_can('edit_posts')
                 ? '<div '.get_block_wrapper_attributes().'><em>'.esc_html__('Vragen.ai: voer een deployment-slug in.', 'vragen-ai').'</em></div>'
                 : '';
@@ -138,8 +124,6 @@ class Embed
 
         wp_enqueue_style('vragenai-embed');
 
-        // Unique mount point per block instance so multiple embeds can live on
-        // one page; the loader mounts into this via the containerSelector arg.
         $containerId = wp_unique_id('vragenai-app-');
         $this->enqueueEmbedScript($slug, $containerId);
 
@@ -150,9 +134,6 @@ class Embed
         );
     }
 
-    /**
-     * Enqueue the site-wide embed (popup/popover) configured in settings.
-     */
     public function enqueueGlobalEmbed(): void
     {
         $slug = $this->globalSlug();
@@ -173,12 +154,6 @@ class Embed
         echo '<div id="vragenai-app-global" class="vragenai-embed--global"></div>';
     }
 
-    /**
-     * Enqueue embed.js for one deployment, targeting a specific container.
-     * The containerSelector lets several embeds coexist on one page (each
-     * registers under window.Vragenai.instances). Loading via wp_enqueue_script
-     * (rather than an inline tag) keeps output escaped and footer-placed.
-     */
     private function enqueueEmbedScript(string $slug, string $containerId): void
     {
         $host = $this->embedHost();
@@ -197,8 +172,6 @@ class Embed
         $args['deployment'] = $slug;
         $args['containerSelector'] = '#'.$containerId;
 
-        // Handle is keyed on the container, not the slug, so the same deployment
-        // can be embedded more than once on a page without de-duplicating.
         wp_enqueue_script(
             'vragenai-embed-'.$containerId,
             $host.'/embed.js?'.http_build_query($args),
@@ -222,9 +195,6 @@ class Embed
         return $this->sanitizeSlug((string) ($settings['global_embed_deployment'] ?? ''));
     }
 
-    /**
-     * Deployment slugs are kebab/snake identifiers; keep only safe characters.
-     */
     private function sanitizeSlug(string $slug): string
     {
         return (string) preg_replace('/[^A-Za-z0-9_-]/', '', $slug);
