@@ -12,10 +12,6 @@ class ApiClient
     }
 
     /**
-     * Resolve the effective credentials. Constants defined in wp-config.php
-     * (VRAGENAI_CUSTOMER / VRAGENAI_TOKEN) take precedence over the stored
-     * option, so production secrets can live outside the database.
-     *
      * @return array{customer: string, token: string}
      */
     public static function credentials(): array
@@ -28,11 +24,6 @@ class ApiClient
         ];
     }
 
-    /**
-     * The API root domain. The customer is always a subdomain of it. Defaults
-     * to vragen.ai; VRAGENAI_API_DOMAIN overrides it for staging or self-hosted
-     * environments. There is no admin UI for this on purpose.
-     */
     public static function domain(): string
     {
         return defined('VRAGENAI_API_DOMAIN') ? (string) VRAGENAI_API_DOMAIN : 'vragen.ai';
@@ -95,6 +86,14 @@ class ApiClient
     public function getSystems(): array|\WP_Error
     {
         return $this->request('GET', '/systems');
+    }
+
+    /**
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function getDeployments(): array|\WP_Error
+    {
+        return $this->request('GET', '/deployments');
     }
 
     /**

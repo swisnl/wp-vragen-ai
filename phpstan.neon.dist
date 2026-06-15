@@ -8,6 +8,7 @@ parameters:
         - vragen-ai.php
         - uninstall.php
     scanFiles:
+        - stubs/constants.php
         - stubs/integrations.php
         - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
         - vendor/php-stubs/wp-cli-stubs/wp-cli-tools-stubs.php

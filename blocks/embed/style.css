@@ -1,0 +1,16 @@
+/*
+ * Vragen.ai embed wrapper.
+ *
+ * The chat/search UI itself is themed in Vragen.ai (deployment appearance
+ * settings and extra_css). The embed renders in light DOM, so theme CSS can
+ * also target its .vragenai-* classes directly.
+ *
+ * For page-type embeds you usually want to reserve some height while the app
+ * loads. Override the custom property in your theme, or use the block's
+ * dimension controls in the editor:
+ *
+ *   .wp-block-vragenai-embed { --vragenai-embed-min-height: 480px; }
+ */
+.wp-block-vragenai-embed {
+	min-height: var( --vragenai-embed-min-height, 0 );
+}

@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "vragenai/embed",
+	"version": "2.0.0",
+	"title": "Vragen.ai embed",
+	"category": "embed",
+	"icon": "format-chat",
+	"description": "Embed een Vragen.ai-deployment via de deployment-slug. Het build-type (pagina, popup of popover) komt uit de deployment zelf.",
+	"keywords": ["vragen", "ai", "chat", "zoeken", "embed"],
+	"textdomain": "vragen-ai",
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"],
+		"spacing": { "margin": true, "padding": true },
+		"dimensions": { "minHeight": true }
+	},
+	"attributes": {
+		"deployment": { "type": "string", "default": "" }
+	},
+	"editorScript": "vragenai-embed-editor",
+	"style": "vragenai-embed"
+}

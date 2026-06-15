@@ -4,6 +4,7 @@ use VragenAI\Admin;
 use VragenAI\ApiClient;
 use VragenAI\Cli\SyncCommand;
 use VragenAI\DocumentSync;
+use VragenAI\Embed;
 
 /**
  * Plugin Name:       Vragen.ai
@@ -20,20 +21,19 @@ use VragenAI\DocumentSync;
 defined('ABSPATH') || exit;
 
 define('VRAGENAI_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('VRAGENAI_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 require_once VRAGENAI_PLUGIN_DIR.'vendor/autoload.php';
 
-// Action Scheduler does not self-load via the Composer autoloader; its bootstrap
-// file must be required so as_schedule_single_action() and friends are defined.
 require_once VRAGENAI_PLUGIN_DIR.'vendor/woocommerce/action-scheduler/action-scheduler.php';
 
-// Kept for WP 6.0–6.6, which don't auto-load bundled translations, this runs on init to avoid the 6.7+ early-load notice.
 add_action('init', static function (): void {
     load_plugin_textdomain('vragen-ai', false, dirname(plugin_basename(__FILE__)).'/languages');
 });
 
 add_action('plugins_loaded', static function (): void {
     (new DocumentSync(ApiClient::fromSettings()))->register();
+    (new Embed)->register();
 
     if (is_admin()) {
         (new Admin)->register();
