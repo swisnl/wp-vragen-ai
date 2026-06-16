@@ -2,6 +2,8 @@
 
 namespace VragenAI\Search;
 
+use VragenAI\ApiClient;
+
 /**
  * "Related content" for the current post, powered by the vragen.ai similar
  * endpoint. Exposed as a server-rendered Gutenberg block and a matching
@@ -22,12 +24,18 @@ class Related
 
     public function registerBlock(): void
     {
+        // The block can't produce results without API credentials, so keep it
+        // out of the inserter until the plugin is configured.
+        if (! $this->isConfigured()) {
+            return;
+        }
+
         // Registered as handles (not file: refs) so the no-build editor script
         // can declare its wp.* dependencies explicitly. Mirrors blocks/embed.
         $assetVersion = static function (string $file): string {
             $path = VRAGENAI_PLUGIN_DIR.'blocks/related/'.$file;
 
-            return file_exists($path) ? (string) filemtime($path) : '2.0.0';
+            return file_exists($path) ? (string) filemtime($path) : '2.1.0';
         };
 
         wp_register_script(
@@ -180,5 +188,12 @@ class Related
         }
 
         return $items;
+    }
+
+    private function isConfigured(): bool
+    {
+        $creds = ApiClient::credentials();
+
+        return $creds['customer'] !== '' && $creds['token'] !== '';
     }
 }

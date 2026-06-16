@@ -61,6 +61,16 @@ class RelatedTest extends TestCase
         $this->assertStringContainsString('Post 88', $html);
     }
 
+    public function test_block_is_not_registered_when_unconfigured(): void
+    {
+        Functions\when('get_option')->justReturn([]); // no credentials
+        Functions\expect('register_block_type')->never();
+        Functions\expect('wp_register_script')->never();
+
+        $client = Mockery::mock(ApiClient::class);
+        (new Related(new SearchService($client)))->registerBlock();
+    }
+
     public function test_renders_cards_with_image_and_excerpt(): void
     {
         $this->stubSite();

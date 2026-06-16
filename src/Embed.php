@@ -82,10 +82,18 @@ class Embed
 
     public function registerBlock(): void
     {
+        // Without a customer there is no host to load the embed from, so keep
+        // the block out of the inserter until that's configured. (Unlike the
+        // related block it doesn't require a token — the editor falls back to
+        // manual slug entry when the deployment list can't be fetched.)
+        if (ApiClient::credentials()['customer'] === '') {
+            return;
+        }
+
         $assetVersion = static function (string $file): string {
             $path = VRAGENAI_PLUGIN_DIR.'blocks/embed/'.$file;
 
-            return file_exists($path) ? (string) filemtime($path) : '2.0.0';
+            return file_exists($path) ? (string) filemtime($path) : '2.1.0';
         };
 
         wp_register_script(
