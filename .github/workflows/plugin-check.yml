@@ -1,0 +1,53 @@
+name: Run plugin check
+
+on:
+  - push
+  - pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: 8.1
+          tools: composer:v2
+          coverage: none
+
+      - name: Install production dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      # Check what actually ships: build the distribution into a correctly named
+      # "vragen-ai" directory (so the text domain matches the slug) with the
+      # development files removed, exactly as the WordPress.org deploy does.
+      - name: Build distribution
+        run: |
+          grep -vE '^\s*(#|$)' .distignore > "$RUNNER_TEMP/distignore-excludes.txt"
+          mkdir -p build/vragen-ai
+          rsync -a \
+            --exclude='/.git' \
+            --exclude='/build' \
+            --exclude='.DS_Store' \
+            --exclude-from="$RUNNER_TEMP/distignore-excludes.txt" \
+            ./ build/vragen-ai/
+
+      - name: Run plugin check
+        uses: WordPress/plugin-check-action@98a1788320d0add90df2d8183934ecccbc4e05d2 # v1.1.7
+        with:
+          build-dir: ./build/vragen-ai
+          # Both findings are intentional and reviewed:
+          #  - embed.js is loaded from the customer's Vragen.ai instance (an
+          #    external, versionless loader), so wp_enqueue_script() has no version.
+          #  - load_plugin_textdomain() is kept for WordPress 6.0-6.6 support.
+          ignore-codes: |
+            WordPress.WP.EnqueuedResourceParameters.MissingVersion
+            PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
