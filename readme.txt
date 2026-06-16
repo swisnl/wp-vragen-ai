@@ -4,7 +4,7 @@ Tags: search, ai, knowledge base, sync, multilingual
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,10 +111,19 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 
 == Changelog ==
 
+= 2.1.0 =
+* New: embed a vragen.ai deployment with the Vragen.ai block, or load a popup/popover deployment site-wide from the settings screen.
+* New: optional semantic native search that replaces the built-in WordPress search with vragen.ai results, with automatic fallback to the native search on error or timeout.
+* New: related-content block and `[vragenai_related]` shortcode that show semantically related posts as a list or cards.
+* New: search tuning on the settings screen — maximum semantic distance and hybrid alpha (semantic vs. keyword), plus a language-fallback toggle.
+
 = 2.0.0 =
 * Initial public release.
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+Adds embedding blocks, optional semantic native search and a related-content block.
 
 = 2.0.0 =
 Initial public release.

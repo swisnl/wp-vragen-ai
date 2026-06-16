@@ -12,7 +12,7 @@ use VragenAI\Search\SearchService;
 /**
  * Plugin Name:       Vragen.ai
  * Description:       Synchronises WordPress content with the vragen.ai knowledge base.
- * Version:           2.0.0
+ * Version:           2.1.0
  * Requires at least: 6.0
  * Requires PHP:      8.1
  * Author:            SWIS
