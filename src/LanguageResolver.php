@@ -51,6 +51,32 @@ class LanguageResolver
     }
 
     /**
+     * The language of the current request, used to resolve search results into
+     * the right translation. On the front end this reflects the visitor's
+     * active language (WPML/Polylang); on monolingual sites it is the locale.
+     */
+    public function getCurrentLanguage(): string
+    {
+        // WPML
+        if (defined('ICL_LANGUAGE_CODE')) {
+            $current = apply_filters('wpml_current_language', null); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML-defined integration hook.
+            if (is_string($current) && $current !== '') {
+                return $current;
+            }
+        }
+
+        // Polylang
+        if (function_exists('pll_current_language')) {
+            $current = pll_current_language('slug');
+            if (is_string($current) && $current !== '') {
+                return $current;
+            }
+        }
+
+        return get_locale();
+    }
+
+    /**
      * Map of language code => post ID for every translation in the post's
      * translation group, including the post itself. Monolingual sites (or
      * untranslated posts) return a single entry.
@@ -101,5 +127,22 @@ class LanguageResolver
         $default = $this->getDefaultLanguage();
 
         return $translations[$default] ?? (int) min($translations);
+    }
+
+    /**
+     * The post ID for a given language within the translation group of the
+     * supplied canonical (default-language) post. Returns null when the group
+     * has no translation in that language. Documents are keyed on the canonical
+     * post, so this is how a search hit is resolved back to the post the
+     * visitor should actually see.
+     */
+    public function getTranslationInLanguage(int $canonicalPostId, string $language): ?int
+    {
+        $canonicalPost = get_post($canonicalPostId);
+        if (! $canonicalPost instanceof \WP_Post) {
+            return null;
+        }
+
+        return $this->getTranslations($canonicalPost)[$language] ?? null;
     }
 }

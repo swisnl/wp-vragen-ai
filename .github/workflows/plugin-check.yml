@@ -1,0 +1,71 @@
+name: Run plugin check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-check:
+    name: Plugin Check
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: 8.1
+          tools: composer:v2, wp-cli
+          coverage: none
+
+      - name: Install production dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Build distribution
+        run: |
+          grep -vE '^\s*(#|$)' .distignore > "$RUNNER_TEMP/distignore-excludes.txt"
+          mkdir -p build/vragen-ai
+          rsync -a \
+            --exclude='/.git' \
+            --exclude='/build' \
+            --exclude='.DS_Store' \
+            --exclude-from="$RUNNER_TEMP/distignore-excludes.txt" \
+            ./ build/vragen-ai/
+
+      - name: Set up WordPress
+        run: |
+          wp core download --path="$RUNNER_TEMP/wp" --version=latest
+          wp config create --path="$RUNNER_TEMP/wp" --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1
+          wp core install --path="$RUNNER_TEMP/wp" --url=http://localhost --title="Plugin Check" --admin_user=admin --admin_password=password --admin_email=admin@example.com --skip-email
+          cp -r build/vragen-ai "$RUNNER_TEMP/wp/wp-content/plugins/vragen-ai"
+          wp plugin install plugin-check --activate --path="$RUNNER_TEMP/wp"
+
+      - name: Run plugin check
+        run: |
+          wp plugin check vragen-ai --path="$RUNNER_TEMP/wp" --ignore-warnings --format=csv \
+            | tee "$RUNNER_TEMP/plugin-check.csv"
+          if grep -qE '^[0-9]+,[0-9]+,ERROR,' "$RUNNER_TEMP/plugin-check.csv"; then
+            echo "::error::Plugin Check reported errors (see output above)."
+            exit 1
+          fi

@@ -9,6 +9,9 @@
 /.distignore
 /.editorconfig
 /README.md
+/AGENTS.md
+/CLAUDE.md
+/docs
 /node_modules
 /stubs
 /tests

@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "vragenai/related",
+	"version": "2.1.0",
+	"title": "Vragen.ai gerelateerde content",
+	"category": "widgets",
+	"icon": "admin-links",
+	"description": "Toont content gerelateerd aan de huidige pagina op basis van semantische gelijkenis via Vragen.ai.",
+	"keywords": ["vragen", "ai", "gerelateerd", "related", "aanbevolen"],
+	"textdomain": "vragen-ai",
+	"usesContext": ["postId"],
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"],
+		"spacing": { "margin": true, "padding": true }
+	},
+	"attributes": {
+		"title": { "type": "string", "default": "" },
+		"numberOfItems": { "type": "integer", "default": 4 },
+		"displayStyle": { "type": "string", "default": "list" },
+		"maxDistance": { "type": "number" }
+	},
+	"editorScript": "vragenai-related-editor",
+	"style": "vragenai-related"
+}

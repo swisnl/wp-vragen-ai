@@ -1,19 +1,21 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Vragen.ai 2.0.0\n"
+"Project-Id-Version: Vragen.ai 2.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/vragen-ai\n"
-"POT-Creation-Date: 2026-06-10T11:50:55+02:00\n"
-"PO-Revision-Date: 2026-06-03T12:18:55+02:00\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-10T11:50:55+02:00\n"
+"PO-Revision-Date: 2026-06-03T12:18:55+02:00\n"
+"Language: en_US\n"
 "X-Domain: vragen-ai\n"
 
 #. Plugin Name of the plugin
-#: vragen-ai.php src/Admin.php:17 src/Admin.php:18
+#: vragen-ai.php
+#: src/Admin.php:17
+#: src/Admin.php:18
 msgid "Vragen.ai"
 msgstr ""
 
@@ -27,101 +29,93 @@ msgstr ""
 msgid "SWIS"
 msgstr ""
 
-#: src/Admin.php:94
+#: src/Admin.php:106
 msgid "Vragen.ai instellingen"
 msgstr "Vragen.ai settings"
 
 #. translators: %s: API error message
-#: src/Admin.php:101
+#: src/Admin.php:113
 #, php-format
 msgid "Verbinding met vragen.ai mislukt: %s"
 msgstr "Connection to vragen.ai failed: %s"
 
-#: src/Admin.php:107
+#: src/Admin.php:119
 msgid "Verbonden met vragen.ai."
 msgstr "Connected to vragen.ai."
 
 #. translators: %d: number of posts queued
-#: src/Admin.php:116
+#: src/Admin.php:128
 #, php-format
 msgid "%d posts in de wachtrij geplaatst voor synchronisatie."
 msgstr "%d posts queued for synchronization."
 
-#: src/Admin.php:127
+#: src/Admin.php:139
 msgid "Klantnaam"
 msgstr "Customer name"
 
-#: src/Admin.php:135
+#: src/Admin.php:147
 msgid "Ingesteld via de constante VRAGENAI_CUSTOMER in wp-config.php."
 msgstr "Set via the VRAGENAI_CUSTOMER constant in wp-config.php."
 
 #. translators: %s: API root domain, e.g. vragen.ai
-#: src/Admin.php:139
+#: src/Admin.php:151
 #, php-format
 msgid "Subdomein van {klantnaam}.%s"
 msgstr "Subdomain of {customer}.%s"
 
-#: src/Admin.php:147
+#: src/Admin.php:159
 msgid "API-token"
 msgstr "API token"
 
-#: src/Admin.php:154
+#: src/Admin.php:166
 msgid "Ingesteld via de constante VRAGENAI_TOKEN in wp-config.php."
 msgstr "Set via the VRAGENAI_TOKEN constant in wp-config.php."
 
-#: src/Admin.php:156
+#: src/Admin.php:168
 msgid "Er is een token opgeslagen. Laat dit veld leeg om het te behouden."
 msgstr "A token is stored. Leave this field empty to keep it."
 
-#: src/Admin.php:158
+#: src/Admin.php:170
 msgid "Het API-token van vragen.ai."
 msgstr "The vragen.ai API token."
 
-#: src/Admin.php:164
+#: src/Admin.php:176
 msgid "Te synchroniseren contenttypen"
 msgstr "Content types to synchronize"
 
-#: src/Admin.php:180
+#: src/Admin.php:192
 msgid "Globale embed"
 msgstr "Global embed"
 
-#: src/Admin.php:185
+#: src/Admin.php:197
 msgid "— Geen —"
 msgstr "— None —"
 
-#: src/Admin.php:197
-msgid ""
-"Optioneel. Laadt een popup- of popover-deployment site-breed. Laat leeg om "
-"uit te schakelen. Gebruik voor pagina-embeds het blok \"Vragen.ai embed\"."
-msgstr ""
-"Optional. Loads a popup or popover deployment site-wide. Leave empty to "
-"disable. For page embeds, use the \"Vragen.ai embed\" block."
+#: src/Admin.php:209
+msgid "Optioneel. Laadt een popup- of popover-deployment site-breed. Laat leeg om uit te schakelen. Gebruik voor pagina-embeds het blok \"Vragen.ai embed\"."
+msgstr "Optional. Loads a popup or popover deployment site-wide. Leave empty to disable. For page embeds, use the \"Vragen.ai embed\" block."
 
-#: src/Admin.php:201
+#: src/Admin.php:254
 msgid "Instellingen opslaan"
 msgstr "Save settings"
 
-#: src/Admin.php:205
+#: src/Admin.php:258
 msgid "Bulk-synchronisatie"
 msgstr "Bulk synchronization"
 
-#: src/Admin.php:206
-msgid ""
-"Synchroniseer alle gepubliceerde content naar vragen.ai. Posts worden via de "
-"wachtrij verwerkt."
-msgstr ""
-"Synchronize all published content to vragen.ai. Posts are processed via the "
-"queue."
+#: src/Admin.php:259
+msgid "Synchroniseer alle gepubliceerde content naar vragen.ai. Posts worden via de wachtrij verwerkt."
+msgstr "Synchronize all published content to vragen.ai. Posts are processed via the queue."
 
-#: src/Admin.php:210
+#: src/Admin.php:263
 msgid "Bulk-synchronisatie starten"
 msgstr "Start bulk synchronization"
 
-#: src/Admin.php:219
+#: src/Admin.php:272
 msgid "Geen toegang."
 msgstr "Access denied."
 
-#: src/Embed.php:135
+#: src/Embed.php:129
 msgid "Vragen.ai: voer een deployment-slug in."
 msgstr "Vragen.ai: enter a deployment slug."
 
@@ -150,12 +144,8 @@ msgid "Vragen.ai embed"
 msgstr "Vragen.ai embed"
 
 #: blocks/embed/edit.js:121
-msgid ""
-"Kies de Vragen.ai-deployment om in te sluiten. Het build-type (pagina, popup "
-"of popover) komt uit de deployment zelf."
-msgstr ""
-"Choose the Vragen.ai deployment to embed. The build type (page, popup or "
-"popover) comes from the deployment itself."
+msgid "Kies de Vragen.ai-deployment om in te sluiten. Het build-type (pagina, popup of popover) komt uit de deployment zelf."
+msgstr "Choose the Vragen.ai deployment to embed. The build type (page, popup or popover) comes from the deployment itself."
 
 #: blocks/embed/block.json
 msgctxt "block title"
@@ -164,19 +154,17 @@ msgstr "Vragen.ai embed"
 
 #: blocks/embed/block.json
 msgctxt "block description"
-msgid ""
-"Embed een Vragen.ai-deployment via de deployment-slug. Het build-type "
-"(pagina, popup of popover) komt uit de deployment zelf."
-msgstr ""
-"Embed a Vragen.ai deployment by its slug. The build type (page, popup or "
-"popover) comes from the deployment itself."
+msgid "Embed een Vragen.ai-deployment via de deployment-slug. Het build-type (pagina, popup of popover) komt uit de deployment zelf."
+msgstr "Embed a Vragen.ai deployment by its slug. The build type (page, popup or popover) comes from the deployment itself."
 
 #: blocks/embed/block.json
+#: blocks/related/block.json
 msgctxt "block keyword"
 msgid "vragen"
 msgstr "questions"
 
 #: blocks/embed/block.json
+#: blocks/related/block.json
 msgctxt "block keyword"
 msgid "ai"
 msgstr "ai"
@@ -196,18 +184,99 @@ msgctxt "block keyword"
 msgid "embed"
 msgstr "embed"
 
-#~ msgid ""
-#~ "Optioneel. Laadt deze Vragen.ai-deployment (slug) site-breed, handig voor "
-#~ "popup- of popover-types. Laat leeg om uit te schakelen. Gebruik voor "
-#~ "pagina-embeds het blok \"Vragen.ai embed\"."
-#~ msgstr ""
-#~ "Optional. Loads this Vragen.ai deployment (slug) site-wide, useful for "
-#~ "popup or popover types. Leave empty to disable. For page embeds, use the "
-#~ "\"Vragen.ai embed\" block."
+#: src/Admin.php:214
+msgid "Zoeken"
+msgstr "Search"
 
-#~ msgid ""
-#~ "Voer de deployment-slug uit Vragen.ai in. Het build-type (pagina, popup "
-#~ "of popover) komt uit de deployment zelf."
-#~ msgstr ""
-#~ "Enter the deployment slug from Vragen.ai. The build type (page, popup or "
-#~ "popover) comes from the deployment itself."
+#: src/Admin.php:219
+msgid "Vervang de standaard WordPress-zoekfunctie door semantisch zoeken via vragen.ai."
+msgstr "Replace the default WordPress search with semantic search via vragen.ai."
+
+#: src/Admin.php:224
+msgid "Taalfallback: toon resultaten in de standaardtaal als er geen vertaling in de huidige taal bestaat."
+msgstr "Language fallback: show results in the default language when no translation exists in the current language."
+
+#: src/Admin.php:226
+msgid "Alleen gesynchroniseerde content is doorzoekbaar. Bij een fout of time-out valt het zoeken automatisch terug op de standaardzoekfunctie van WordPress."
+msgstr "Only synchronized content is searchable. On an error or timeout, search automatically falls back to WordPress' built-in search."
+
+#: src/Search/Related.php:80
+msgid "Vragen.ai: nog geen gerelateerde content beschikbaar."
+msgstr "Vragen.ai: no related content available yet."
+
+#: blocks/related/block.json
+msgctxt "block title"
+msgid "Vragen.ai gerelateerde content"
+msgstr "Vragen.ai related content"
+
+#: blocks/related/block.json
+msgctxt "block description"
+msgid "Toont content gerelateerd aan de huidige pagina op basis van semantische gelijkenis via Vragen.ai."
+msgstr "Shows content related to the current page based on semantic similarity via Vragen.ai."
+
+#: blocks/related/block.json
+msgctxt "block keyword"
+msgid "gerelateerd"
+msgstr "related"
+
+#: blocks/related/block.json
+msgctxt "block keyword"
+msgid "related"
+msgstr "related"
+
+#: blocks/related/block.json
+msgctxt "block keyword"
+msgid "aanbevolen"
+msgstr "recommended"
+
+#: blocks/related/edit.js:67
+msgid "Instellingen"
+msgstr "Settings"
+
+#: blocks/related/edit.js:69
+msgid "Titel"
+msgstr "Title"
+
+#: blocks/related/edit.js:71
+msgid "Bijv. Gerelateerde content"
+msgstr "E.g. Related content"
+
+#: blocks/related/edit.js:78
+msgid "Aantal items"
+msgstr "Number of items"
+
+#: src/Admin.php:232
+msgid "Maximale semantische afstand"
+msgstr "Maximum semantic distance"
+
+#: src/Admin.php:238
+msgid "Optioneel (0–1). Filtert resultaten met een te grote semantische afstand weg; lager is strenger. Laat leeg voor geen limiet."
+msgstr "Optional (0–1). Filters out results whose semantic distance is too large; lower is stricter. Leave empty for no limit."
+
+#: blocks/related/edit.js:88
+msgid "Weergave"
+msgstr "Display"
+
+#: blocks/related/edit.js:91
+msgid "Lijst"
+msgstr "List"
+
+#: blocks/related/edit.js:92
+msgid "Kaarten"
+msgstr "Cards"
+
+#: src/Admin.php:244
+msgid "Alpha (semantisch vs. trefwoord)"
+msgstr "Alpha (semantic vs. keyword)"
+
+#: src/Admin.php:250
+msgid "Optioneel (0–1). Weegt hybride zoeken: 1 = puur semantisch, 0 = puur op trefwoorden. Laat leeg voor de standaard van vragen.ai."
+msgstr "Optional (0–1). Weights hybrid search: 1 = purely semantic, 0 = purely keyword-based. Leave empty for the vragen.ai default."
+
+#: blocks/related/edit.js:100
+msgid "Max. semantische afstand"
+msgstr "Max. semantic distance"
+
+#: blocks/related/edit.js:106
+msgid "Optioneel. Laat leeg voor geen limiet; lager is strenger."
+msgstr "Optional. Leave empty for no limit; lower is stricter."
