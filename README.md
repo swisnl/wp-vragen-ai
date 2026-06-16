@@ -74,11 +74,32 @@ With WPML or Polylang active, all translations of a post are treated as **one** 
 
 Translations are assumed to be semantically equivalent, so only the canonical content is indexed; vragen.ai's semantic layer plus a language filter handle per-language retrieval.
 
+## Search
+
+Optionally replace the built-in WordPress search with vragen.ai's semantic search. Under **Settings → Vragen.ai**, enable *Replace the default WordPress search*. Your theme's existing search page, results template and widget then return semantic results ordered by relevance, with pagination preserved. Only synced content is searchable, and if the API is unavailable or times out the plugin falls back to WordPress' built-in search — so search never breaks.
+
+Tuning (all optional, on the settings screen):
+
+- **Maximum semantic distance** (0–1) — filter out results that are too far from the query; lower is stricter.
+- **Alpha** (0–1) — hybrid-search weighting: `1` is purely semantic, `0` is purely keyword-based.
+- **Language fallback** — show results in the default language when no translation exists in the current language.
+
+The `vragenai_native_search_options` filter lets you adjust these (and the searched post types) per query in code.
+
+## Related content
+
+Show content related to the current post, powered by vragen.ai's similarity search:
+
+- **Vragen.ai related content block** — add it to a post or template, set the number of items, and choose a list or card layout (cards show the featured image and excerpt). The block only appears in the inserter once the plugin is configured.
+- **`[vragenai_related]` shortcode** — for the classic editor or templates, e.g. `[vragenai_related items="6" layout="cards"]`.
+
+Related content uses the source post's synced document, so the post must already be synced. When there are no results (or the post isn't synced) nothing is shown to visitors.
+
 ## Embedding Vragen.ai
 
 Besides syncing content, the plugin can embed a Vragen.ai deployment on your site:
 
-- **Vragen.ai embed block** — add the block to any post or page and pick a deployment from the dropdown. The build type (page, popup or popover) comes from the deployment itself. You can place multiple embeds on one page.
+- **Vragen.ai embed block** — add the block to any post or page and pick a deployment from the dropdown. The build type (page, popup or popover) comes from the deployment itself. You can place multiple embeds on one page. The block appears in the inserter once a customer is configured.
 - **Site-wide embed** — choose a popup or popover deployment under **Settings → Vragen.ai** to load it on every page.
 
 The embed host is derived from your configured customer and `VRAGENAI_API_DOMAIN`, so you only choose the deployment.
