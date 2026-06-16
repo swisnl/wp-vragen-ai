@@ -79,7 +79,7 @@ final class SearchService
      * Find content related to a post ("more like this"), excluding the post
      * itself. Returns null when the post isn't synced or on any API failure.
      *
-     * @param  array{post_types?: list<string>, language_fallback?: bool}  $options
+     * @param  array{post_types?: list<string>, language_fallback?: bool, max_distance?: float|null}  $options
      * @return array{ids: list<int>, total: int}|null
      */
     public function related(int $postId, int $limit, array $options = []): ?array
@@ -100,6 +100,12 @@ final class SearchService
             'page[limit]' => max(1, $limit),
             'fields[documents]' => self::FIELDS,
         ];
+
+        // The similar endpoint names its max-distance constraint "distance"
+        // (the search endpoint calls the same thing "maxDistance").
+        if (isset($options['max_distance'])) {
+            $params['distance'] = $options['max_distance'];
+        }
 
         $this->applyFilters($params, $options);
 

@@ -18,7 +18,8 @@
 	"attributes": {
 		"title": { "type": "string", "default": "" },
 		"numberOfItems": { "type": "integer", "default": 4 },
-		"displayStyle": { "type": "string", "default": "list" }
+		"displayStyle": { "type": "string", "default": "list" },
+		"maxDistance": { "type": "number" }
 	},
 	"editorScript": "vragenai-related-editor",
 	"style": "vragenai-related"

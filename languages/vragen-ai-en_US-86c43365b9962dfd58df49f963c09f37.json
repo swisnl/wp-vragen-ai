@@ -30,6 +30,12 @@
             ],
             "Kaarten": [
                 "Cards"
+            ],
+            "Max. semantische afstand": [
+                "Max. semantic distance"
+            ],
+            "Optioneel. Laat leeg voor geen limiet; lager is strenger.": [
+                "Optional. Leave empty for no limit; lower is stricter."
             ]
         }
     }

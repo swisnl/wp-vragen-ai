@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-16T15:27:46+02:00\n"
+"POT-Creation-Date: 2026-06-16T16:27:26+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: vragen-ai\n"
@@ -149,11 +149,11 @@ msgstr ""
 msgid "Geen toegang."
 msgstr ""
 
-#: src/Embed.php:121
+#: src/Embed.php:129
 msgid "Vragen.ai: voer een deployment-slug in."
 msgstr ""
 
-#: src/Search/Related.php:77
+#: src/Search/Related.php:80
 msgid "Vragen.ai: nog geen gerelateerde content beschikbaar."
 msgstr ""
 
@@ -211,6 +211,14 @@ msgstr ""
 
 #: blocks/related/edit.js:92
 msgid "Kaarten"
+msgstr ""
+
+#: blocks/related/edit.js:100
+msgid "Max. semantische afstand"
+msgstr ""
+
+#: blocks/related/edit.js:106
+msgid "Optioneel. Laat leeg voor geen limiet; lager is strenger."
 msgstr ""
 
 #: blocks/embed/block.json

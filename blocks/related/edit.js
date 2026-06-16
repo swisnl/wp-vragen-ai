@@ -95,6 +95,19 @@
 							setAttributes( { displayStyle: value } );
 						},
 						__nextHasNoMarginBottom: true,
+					} ),
+					el( RangeControl, {
+						label: __( 'Max. semantische afstand', 'vragen-ai' ),
+						value: attributes.maxDistance,
+						min: 0,
+						max: 1,
+						step: 0.05,
+						allowReset: true,
+						help: __( 'Optioneel. Laat leeg voor geen limiet; lager is strenger.', 'vragen-ai' ),
+						onChange: function ( value ) {
+							setAttributes( { maxDistance: value } );
+						},
+						__nextHasNoMarginBottom: true,
 					} )
 				)
 			),

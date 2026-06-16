@@ -61,6 +61,19 @@ class RelatedTest extends TestCase
         $this->assertStringContainsString('Post 88', $html);
     }
 
+    public function test_max_distance_attribute_is_forwarded_to_the_api(): void
+    {
+        $this->stubSite();
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('similarDocuments')
+            ->once()
+            ->withArgs(static fn (string $ref, array $params): bool => ($params['distance'] ?? null) === 0.3)
+            ->andReturn($this->similarResponse());
+
+        (new Related(new SearchService($client)))->renderBlock(['maxDistance' => 0.3]);
+    }
+
     public function test_block_is_not_registered_when_unconfigured(): void
     {
         Functions\when('get_option')->justReturn([]); // no credentials

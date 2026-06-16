@@ -69,7 +69,10 @@ class Related
             : (int) get_the_ID();
 
         $count = max(1, (int) ($attributes['numberOfItems'] ?? self::DEFAULT_COUNT));
-        $items = $this->resolveItems($postId, $count);
+        $maxDistance = isset($attributes['maxDistance']) && is_numeric($attributes['maxDistance'])
+            ? (float) $attributes['maxDistance']
+            : null;
+        $items = $this->resolveItems($postId, $count, $maxDistance);
 
         if ($items === []) {
             // Hint authors in the editor/preview; render nothing for visitors.
@@ -147,16 +150,21 @@ class Related
     public function renderShortcode($atts): string
     {
         $atts = shortcode_atts(
-            ['title' => '', 'items' => self::DEFAULT_COUNT, 'layout' => 'list'],
+            ['title' => '', 'items' => self::DEFAULT_COUNT, 'layout' => 'list', 'distance' => ''],
             (array) $atts,
             'vragenai_related'
         );
 
-        return $this->renderBlock([
+        $attributes = [
             'title' => (string) $atts['title'],
             'numberOfItems' => (int) $atts['items'],
             'displayStyle' => $atts['layout'] === 'cards' ? 'cards' : 'list',
-        ]);
+        ];
+        if (is_numeric($atts['distance'])) {
+            $attributes['maxDistance'] = (float) $atts['distance'];
+        }
+
+        return $this->renderBlock($attributes);
     }
 
     /**
@@ -164,16 +172,21 @@ class Related
      *
      * @return list<array{id: int, title: string, url: string}>
      */
-    private function resolveItems(int $postId, int $count): array
+    private function resolveItems(int $postId, int $count, ?float $maxDistance = null): array
     {
         if ($postId <= 0) {
             return [];
         }
 
         $settings = (array) get_option('vragenai_settings', []);
-        $result = $this->service->related($postId, $count, [
+        $options = [
             'language_fallback' => (bool) ($settings['search_language_fallback'] ?? true),
-        ]);
+        ];
+        if ($maxDistance !== null) {
+            $options['max_distance'] = $maxDistance;
+        }
+
+        $result = $this->service->related($postId, $count, $options);
 
         if ($result === null) {
             return [];

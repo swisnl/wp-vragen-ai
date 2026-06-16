@@ -124,4 +124,18 @@ class SearchServiceTest extends TestCase
         $this->assertNotNull($result);
         $this->assertSame([55, 88], $result['ids']);
     }
+
+    public function test_related_sends_max_distance_as_the_distance_param(): void
+    {
+        $this->stubConfiguredSite();
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('similarDocuments')
+            ->once()
+            // The similar endpoint names it "distance", not "maxDistance".
+            ->withArgs(static fn (string $ref, array $params): bool => ($params['distance'] ?? null) === 0.4)
+            ->andReturn(['data' => [], 'meta' => ['total' => 0]]);
+
+        (new SearchService($client))->related(100, 3, ['max_distance' => 0.4]);
+    }
 }

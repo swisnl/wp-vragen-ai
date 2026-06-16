@@ -115,7 +115,7 @@ msgstr "Start bulk synchronization"
 msgid "Geen toegang."
 msgstr "Access denied."
 
-#: src/Embed.php:121
+#: src/Embed.php:129
 msgid "Vragen.ai: voer een deployment-slug in."
 msgstr "Vragen.ai: enter a deployment slug."
 
@@ -200,7 +200,7 @@ msgstr "Language fallback: show results in the default language when no translat
 msgid "Alleen gesynchroniseerde content is doorzoekbaar. Bij een fout of time-out valt het zoeken automatisch terug op de standaardzoekfunctie van WordPress."
 msgstr "Only synchronized content is searchable. On an error or timeout, search automatically falls back to WordPress' built-in search."
 
-#: src/Search/Related.php:77
+#: src/Search/Related.php:80
 msgid "Vragen.ai: nog geen gerelateerde content beschikbaar."
 msgstr "Vragen.ai: no related content available yet."
 
@@ -272,3 +272,11 @@ msgstr "Alpha (semantic vs. keyword)"
 #: src/Admin.php:250
 msgid "Optioneel (0–1). Weegt hybride zoeken: 1 = puur semantisch, 0 = puur op trefwoorden. Laat leeg voor de standaard van vragen.ai."
 msgstr "Optional (0–1). Weights hybrid search: 1 = purely semantic, 0 = purely keyword-based. Leave empty for the vragen.ai default."
+
+#: blocks/related/edit.js:100
+msgid "Max. semantische afstand"
+msgstr "Max. semantic distance"
+
+#: blocks/related/edit.js:106
+msgid "Optioneel. Laat leeg voor geen limiet; lager is strenger."
+msgstr "Optional. Leave empty for no limit; lower is stricter."
