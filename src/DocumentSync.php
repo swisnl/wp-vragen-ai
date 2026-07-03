@@ -244,7 +244,43 @@ class DocumentSync
     {
         // 'the_content' is a WordPress core filter; applying it renders the stored
         // post content exactly as the front end would before sending it to the API.
-        $body = apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+        /**
+         * Filters the stored post_content before WordPress renders it for indexing.
+         *
+         * Integrations that extract structured block content separately can remove
+         * those blocks here to avoid indexing denied or duplicated rendered output.
+         *
+         * @param  string  $content  Stored post_content.
+         * @param  \WP_Post  $post  The post being synced.
+         */
+        $content = (string) apply_filters('vragenai_document_render_content_source', $post->post_content, $post);
+
+        $body = apply_filters('the_content', $content); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+
+        /**
+         * Filters additional HTML fragments that should be indexed for a post.
+         *
+         * Use this for content stored outside post_content, such as ACF fields,
+         * page-builder metadata, or other custom field content. Fragments are
+         * appended after the rendered WordPress content.
+         *
+         * @param  mixed  $fragments  Additional HTML/text fragments.
+         * @param  \WP_Post  $post  The post being synced.
+         */
+        $extraFragments = apply_filters('vragenai_document_content_fragments', [], $post);
+        $fragments = [$body];
+        foreach (is_array($extraFragments) ? $extraFragments : [$extraFragments] as $fragment) {
+            if (is_scalar($fragment) || $fragment instanceof \Stringable) {
+                $fragments[] = (string) $fragment;
+            }
+        }
+
+        $fragments = array_filter(
+            array_map('trim', $fragments),
+            static fn (string $fragment): bool => $fragment !== '',
+        );
+
+        $body = implode("\n\n", $fragments);
 
         // Mirror Drupal: wrap bare inline content in <p> so the API receives valid HTML.
         if (! $this->hasBlockLevelElements($body)) {

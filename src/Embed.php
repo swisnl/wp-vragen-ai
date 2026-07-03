@@ -93,7 +93,7 @@ class Embed
         $assetVersion = static function (string $file): string {
             $path = VRAGENAI_PLUGIN_DIR.'blocks/embed/'.$file;
 
-            return file_exists($path) ? (string) filemtime($path) : '2.1.0';
+            return file_exists($path) ? (string) filemtime($path) : '2.1.1';
         };
 
         wp_register_script(
