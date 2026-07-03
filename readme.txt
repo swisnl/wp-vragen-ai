@@ -4,7 +4,7 @@ Tags: search, ai, knowledge base, sync, multilingual
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,12 +20,13 @@ Features:
 * Background processing through Action Scheduler, large sites stay responsive.
 * Bulk synchronisation of all published content from the settings screen.
 * WP-CLI command (`wp vragenai sync`) for scripted/initial imports.
+* Native ACF content support for supported regular fields and stored ACF block fields.
 * PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
 * Multilingual support for WPML and Polylang: all translations of a post are merged into a single document, tagged with every language it is available in.
 * Embed a vragen.ai deployment (page, popup or popover) with the Vragen.ai block, or load one site-wide from the settings screen.
 * Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
 * Show related content for the current post with the Vragen.ai related-content block or the `[vragenai_related]` shortcode.
-* Filters (`vragenai_should_index_post`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
+* Filters (`vragenai_should_index_post`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 The admin UI is available in English and Dutch, following your site language.
 
@@ -37,7 +38,7 @@ The API is reached at the endpoint configured for your account, `https://{custom
 
 When you publish, update, trash or delete content of an enabled post type and when you run a bulk synchronisation the plugin sends the following to that endpoint:
 
-* the post title, public URL and rendered content;
+* the post title, public URL, rendered content, supported ACF field content and any additional content fragments supplied through filters;
 * metadata: author display name, post type, post format, language(s), publish/modified dates, taxonomy terms and the featured-image URL;
 * the URLs and MIME types of attached PDF files, so vragen.ai can fetch and extract their text server-side (the file contents themselves are not uploaded by the plugin);
 * your configured customer name and API token (sent as a Bearer authorization header).
@@ -111,6 +112,11 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 
 == Changelog ==
 
+= 2.1.1 =
+* New: native ACF content support for supported regular fields and stored ACF block fields.
+* New: ACF file fields can contribute PDF URLs for server-side extraction by vragen.ai.
+* Dev: added filters for customising included ACF fields and blocks.
+
 = 2.1.0 =
 * New: embed a vragen.ai deployment with the Vragen.ai block, or load a popup/popover deployment site-wide from the settings screen.
 * New: optional semantic native search that replaces the built-in WordPress search with vragen.ai results, with automatic fallback to the native search on error or timeout.
@@ -121,6 +127,9 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 * Initial public release.
 
 == Upgrade Notice ==
+
+= 2.1.1 =
+Adds native ACF content support and ACF PDF file-field indexing.
 
 = 2.1.0 =
 Adds embedding blocks, optional semantic native search and a related-content block.

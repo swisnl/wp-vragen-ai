@@ -17,6 +17,7 @@ class AttachmentExtractorTest extends TestCase
         // Both attachments resolve to the same URL -> the second is deduplicated.
         Functions\when('wp_get_attachment_url')->justReturn('https://example.test/doc.pdf');
         Functions\when('get_attached_file')->justReturn('/uploads/doc.pdf');
+        Functions\when('get_field_objects')->justReturn([]);
 
         $result = (new AttachmentExtractor)->extract(new \WP_Post(['ID' => 10]));
 

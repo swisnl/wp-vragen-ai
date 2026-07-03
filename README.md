@@ -10,12 +10,13 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 - Background processing through Action Scheduler, large sites stay responsive.
 - Bulk synchronisation of all published content from the settings screen.
 - WP-CLI command (`wp vragenai sync`) for scripted or initial imports.
+- Native ACF content support for supported regular fields and stored ACF block fields.
 - PDF attachments (directly attached media and ACF file fields) are passed to vragen.ai for server-side text extraction.
 - Multilingual support for WPML and Polylang.
 - Embed a vragen.ai deployment (page, popup or popover) with the **Vragen.ai** block, or load one site-wide from the settings screen.
 - Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
 - Show related content for the current post with the **Vragen.ai related content** block or the `[vragenai_related]` shortcode.
-- Filters (`vragenai_should_index_post`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
+- Filters (`vragenai_should_index_post`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 ## Requirements
 
@@ -29,7 +30,7 @@ The API is reached at the endpoint configured for your account, `https://{custom
 
 When you publish, update, trash or delete content of an enabled post type and when you run a bulk synchronisation the plugin sends the following to that endpoint:
 
-* the post title, public URL and rendered content;
+* the post title, public URL, rendered content, supported ACF field content and any additional content fragments supplied through filters;
 * metadata: author display name, post type, post format, language(s), publish/modified dates, taxonomy terms and the featured-image URL;
 * the URLs and MIME types of attached PDF files, so vragen.ai can fetch and extract their text server-side (the file contents themselves are not uploaded by the plugin);
 * your configured customer name and API token (sent as a Bearer authorization header).
@@ -73,6 +74,32 @@ With customer `your-organisation` this targets `https://your-organisation.exampl
 With WPML or Polylang active, all translations of a post are treated as **one** piece of content: they are merged into a single vragen.ai document keyed on the default-language (canonical) translation. The document content is taken from that translation, and every available language is listed in its metadata.
 
 Translations are assumed to be semantically equivalent, so only the canonical content is indexed; vragen.ai's semantic layer plus a language filter handle per-language retrieval.
+
+## ACF content
+
+When ACF is active, supported regular fields and stored ACF block fields are added to the indexed document. By default, the plugin indexes these ACF field types: `flexible_content`, `group`, `repeater`, `text`, `textarea` and `wysiwyg`.
+
+You can exclude a block by name with the `vragenai_acf_block_denylist` filter:
+
+```php
+add_filter( 'vragenai_acf_block_denylist', static function ( array $denylist ): array {
+    $denylist[] = 'acf/newsletter-cta';
+
+    return $denylist;
+} );
+```
+
+You can also opt additional ACF field types into indexing with the `vragenai_include_acf_field` filter:
+
+```php
+add_filter( 'vragenai_include_acf_field', static function ( bool $include, array $field ): bool {
+    if ( in_array( $field['type'] ?? '', [ 'email', 'url', 'my_custom_text_field' ], true ) ) {
+        return true;
+    }
+
+    return $include;
+}, 10, 2 );
+```
 
 ## Search
 
