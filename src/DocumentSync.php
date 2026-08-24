@@ -132,6 +132,14 @@ class DocumentSync
             $attributes['content'] = $this->buildContent($source);
         }
 
+        // Per-language title and URL, so vragen.ai can render a source in the visitor's
+        // language. meta_data.languages above stays exactly as it was: that is the contract the
+        // Drupal module and older app versions read, and this only adds to it.
+        $translations = $this->buildTranslations($source, $url, $translations, $canonicalLanguage);
+        if ($translations !== []) {
+            $attributes['translations'] = $translations;
+        }
+
         /**
          * Filters the document attributes before they are sent to vragen.ai.
          *
@@ -156,6 +164,63 @@ class DocumentSync
         if (is_wp_error($result)) {
             $this->logError('upsert', $result);
         }
+    }
+
+    /**
+     * Per-language title and URL for the post's translation group.
+     *
+     * Two very different sources, deliberately behind one shape:
+     *  - WPML/Polylang: a real post per language, so the title and permalink are read off it;
+     *  - Weglot: no per-language post, so the URL is derived from the language prefix and the
+     *    title is translated through Weglot's API (cached per title hash).
+     *
+     * @param  array<string, int>  $translations  language => post ID
+     * @return array<string, array{title?: string, url?: string}>
+     */
+    private function buildTranslations(\WP_Post $source, string $canonicalUrl, array $translations, string $canonicalLanguage): array
+    {
+        $others = array_diff_key($translations, [$canonicalLanguage => null]);
+
+        if ($others === []) {
+            return [];
+        }
+
+        $weglot = $this->languageResolver->weglot();
+        $isWeglot = $weglot->isActive();
+        $result = [];
+
+        foreach ($others as $language => $postId) {
+            if ($isWeglot && $postId === $source->ID) {
+                $entry = array_filter([
+                    'title' => $weglot->translateTitle($source, $source->post_title, $language),
+                    'url' => $weglot->translatedUrl($canonicalUrl, $language),
+                ]);
+
+                if ($entry !== []) {
+                    $result[$language] = $entry;
+                }
+
+                continue;
+            }
+
+            $translated = get_post($postId);
+            if (! $translated instanceof \WP_Post || ! $this->shouldSyncPost($translated)) {
+                continue;
+            }
+
+            $permalink = get_permalink($translated);
+
+            $entry = array_filter([
+                'title' => $translated->post_title,
+                'url' => $permalink ?: null,
+            ]);
+
+            if ($entry !== []) {
+                $result[$language] = $entry;
+            }
+        }
+
+        return $result;
     }
 
     /**

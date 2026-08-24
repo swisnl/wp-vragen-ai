@@ -4,6 +4,19 @@ namespace VragenAI;
 
 class LanguageResolver
 {
+    public function __construct(private readonly WeglotLanguageResolver $weglot = new WeglotLanguageResolver) {}
+
+    /**
+     * Weglot translates on the fly and stores no per-language posts, so it cannot be resolved
+     * from the database the way WPML and Polylang are. It is therefore consulted last
+     * everywhere below: a site running Weglot alongside either of them keeps its existing,
+     * post-backed behaviour untouched.
+     */
+    public function weglot(): WeglotLanguageResolver
+    {
+        return $this->weglot;
+    }
+
     public function getPostLanguage(\WP_Post $post): string
     {
         // WPML
@@ -44,6 +57,14 @@ class LanguageResolver
             $default = pll_default_language('slug');
             if (is_string($default) && $default !== '') {
                 return $default;
+            }
+        }
+
+        // Weglot: the "original" language is the one the stored post content is written in.
+        if ($this->weglot->isActive()) {
+            $original = $this->weglot->originalLanguage();
+            if ($original !== null) {
+                return $original;
             }
         }
 
@@ -110,6 +131,15 @@ class LanguageResolver
             $map = pll_get_post_translations($post->ID);
             if ($map !== []) {
                 return array_map('intval', $map);
+            }
+        }
+
+        // Weglot: every configured language is served from this same post, so the whole group
+        // maps back to one ID rather than to a post per language.
+        if ($this->weglot->isActive()) {
+            $languages = $this->weglot->languagesFor($post);
+            if ($languages !== []) {
+                return array_fill_keys($languages, $post->ID);
             }
         }
 
