@@ -110,6 +110,37 @@ class WeglotLanguageResolver
     }
 
     /**
+     * The language the current request is being served in.
+     *
+     * Weglot serves the original language on the unprefixed URL and every other language under
+     * a path prefix, so the prefix is the signal. Weglot's own helper is preferred when it is
+     * available, since a site can reconfigure the URL scheme.
+     */
+    public function currentLanguage(): ?string
+    {
+        if (function_exists('weglot_get_current_language')) {
+            $current = weglot_get_current_language();
+
+            if (is_string($current) && $current !== '') {
+                return $current;
+            }
+        }
+
+        $requestUri = isset($_SERVER['REQUEST_URI'])
+            ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']))
+            : '/';
+
+        $path = (string) wp_parse_url($requestUri, PHP_URL_PATH);
+        $segment = strtok(ltrim($path, '/'), '/');
+
+        if (is_string($segment) && in_array($segment, $this->destinationLanguages(), true)) {
+            return $segment;
+        }
+
+        return $this->originalLanguage();
+    }
+
+    /**
      * The translated URL for a language, derived from the permalink by inserting the language
      * code as the first path segment — Weglot's default scheme.
      *

@@ -94,6 +94,14 @@ class LanguageResolver
             }
         }
 
+        // Weglot: the active language is carried by the URL rather than by a per-language post.
+        if ($this->weglot->isActive()) {
+            $current = $this->weglot->currentLanguage();
+            if ($current !== null) {
+                return $current;
+            }
+        }
+
         return get_locale();
     }
 
