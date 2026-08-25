@@ -77,6 +77,55 @@ class ApiClient
     }
 
     /**
+     * Store one language of a document.
+     *
+     * Translations are their own resource rather than an attribute of the document, so a language
+     * can be sent on its own — only the one that actually changed, and never a payload carrying
+     * every language's content at once.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function createTranslation(string $documentId, array $attributes): array|\WP_Error
+    {
+        return $this->request('POST', '/document-translations', [
+            'type' => 'document-translations',
+            'attributes' => $attributes,
+            'relationships' => [
+                'document' => [
+                    'data' => ['type' => 'documents', 'id' => $documentId],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function updateTranslation(string $id, string $documentId, array $attributes): array|\WP_Error
+    {
+        return $this->request('PATCH', "/document-translations/{$id}", [
+            'type' => 'document-translations',
+            'id' => $id,
+            'attributes' => $attributes,
+            'relationships' => [
+                'document' => [
+                    'data' => ['type' => 'documents', 'id' => $documentId],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>|\WP_Error
+     */
+    public function deleteTranslation(string $id): array|\WP_Error
+    {
+        return $this->request('DELETE', "/document-translations/{$id}");
+    }
+
+    /**
      * @return array<string, mixed>|\WP_Error
      */
     public function findByExternalReference(string $ref): array|\WP_Error

@@ -132,14 +132,6 @@ class DocumentSync
             $attributes['content'] = $this->buildContent($source);
         }
 
-        // Per-language title and URL, so vragen.ai can render a source in the visitor's
-        // language. meta_data.languages above stays exactly as it was: that is the contract the
-        // Drupal module and older app versions read, and this only adds to it.
-        $translations = $this->buildTranslations($source, $url, $translations, $canonicalLanguage);
-        if ($translations !== []) {
-            $attributes['translations'] = $translations;
-        }
-
         /**
          * Filters the document attributes before they are sent to vragen.ai.
          *
@@ -163,16 +155,90 @@ class DocumentSync
 
         if (is_wp_error($result)) {
             $this->logError('upsert', $result);
+
+            return;
         }
+
+        $documentId = (string) ($result['data']['id'] ?? $existingId ?? '');
+
+        if ($documentId !== '') {
+            $this->syncTranslations($source, $url, $translations, $canonicalLanguage, $documentId, $existing);
+        }
+    }
+
+    /**
+     * Send each translated language as its own request.
+     *
+     * One language per request rather than one payload carrying them all: a language can then be
+     * sent on its own when only it changed, and no request grows with the number of languages a
+     * site serves.
+     *
+     * @param  array<string, int>  $translations  language => post ID
+     * @param  array<string, mixed>  $existing  the document as vragen.ai returned it
+     */
+    private function syncTranslations(
+        \WP_Post $source,
+        string $canonicalUrl,
+        array $translations,
+        string $canonicalLanguage,
+        string $documentId,
+        array $existing,
+    ): void {
+        $stored = $this->storedTranslationIds($existing);
+
+        foreach ($this->buildTranslations($source, $canonicalUrl, $translations, $canonicalLanguage) as $language => $attributes) {
+            $attributes['locale'] = $language;
+            $existingId = $stored[$language] ?? null;
+
+            $result = $existingId
+                ? $this->client->updateTranslation($existingId, $documentId, $attributes)
+                : $this->client->createTranslation($documentId, $attributes);
+
+            if (is_wp_error($result)) {
+                // The document itself is stored and citable in its canonical language, so a
+                // failed translation is logged rather than aborting the rest of the sync.
+                $this->logError('translation:'.$language, $result);
+            }
+        }
+    }
+
+    /**
+     * Translation ids vragen.ai already holds, keyed by language.
+     *
+     * Read from the document response the sync already fetched, so choosing between a create and
+     * an update costs no extra request.
+     *
+     * @param  array<string, mixed>  $existing
+     * @return array<string, string>
+     */
+    private function storedTranslationIds(array $existing): array
+    {
+        $translations = $existing['data'][0]['attributes']['translations'] ?? [];
+
+        if (! is_array($translations)) {
+            return [];
+        }
+
+        $ids = [];
+
+        foreach ($translations as $language => $translation) {
+            if (is_array($translation) && isset($translation['id'])) {
+                $ids[(string) $language] = (string) $translation['id'];
+            }
+        }
+
+        return $ids;
     }
 
     /**
      * Per-language title and URL for the post's translation group.
      *
      * Two very different sources, deliberately behind one shape:
-     *  - WPML/Polylang: a real post per language, so the title and permalink are read off it;
+     *  - WPML/Polylang: a real post per language, so title, permalink and content are read off it;
      *  - Weglot: no per-language post, so the URL is derived from the language prefix and the
-     *    title is translated through Weglot's API (cached per title hash).
+     *    title is translated through Weglot's API (cached per title hash). No content is sent,
+     *    which tells vragen.ai to fetch the prefixed URL itself — Weglot serves real translated
+     *    HTML there.
      *
      * @param  array<string, int>  $translations  language => post ID
      * @return array<string, array{title?: string, url?: string}>
@@ -213,6 +279,7 @@ class DocumentSync
             $entry = array_filter([
                 'title' => $translated->post_title,
                 'url' => $permalink ?: null,
+                'content' => $this->buildContent($translated),
             ]);
 
             if ($entry !== []) {
@@ -302,6 +369,20 @@ class DocumentSync
         $result = $this->client->updateDocument($existingId, ['meta_data' => $metaData]);
         if (is_wp_error($result)) {
             $this->logError('remove_language', $result);
+        }
+
+        // Narrowing meta_data.languages is what vragen.ai reconciles against, but deleting the
+        // translation removes it now instead of on the next push — and takes any page vragen.ai
+        // fetched for it along with it.
+        $translationId = $this->storedTranslationIds($existing)[$language] ?? null;
+
+        if ($translationId === null) {
+            return;
+        }
+
+        $result = $this->client->deleteTranslation($translationId);
+        if (is_wp_error($result)) {
+            $this->logError('remove_translation', $result);
         }
     }
 
