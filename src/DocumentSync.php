@@ -363,26 +363,26 @@ class DocumentSync
             return;
         }
 
+        // Delete the translation before narrowing the language list. vragen.ai reconciles
+        // translations against meta_data.languages, so narrowing first removes this translation
+        // server-side and the delete below would then report a 404 it cannot act on.
+        $translationId = $this->storedTranslationIds($existing)[$language] ?? null;
+
+        if ($translationId !== null) {
+            $result = $this->client->deleteTranslation($translationId);
+            if (is_wp_error($result)) {
+                $this->logError('remove_translation', $result);
+            }
+        }
+
+        // Narrowing the list is still what keeps the two in step if the delete above never
+        // arrived, so it happens either way.
         $metaData = (array) ($existing['data'][0]['attributes']['meta_data'] ?? []);
         $metaData['languages'] = $remaining;
 
         $result = $this->client->updateDocument($existingId, ['meta_data' => $metaData]);
         if (is_wp_error($result)) {
             $this->logError('remove_language', $result);
-        }
-
-        // Narrowing meta_data.languages is what vragen.ai reconciles against, but deleting the
-        // translation removes it now instead of on the next push — and takes any page vragen.ai
-        // fetched for it along with it.
-        $translationId = $this->storedTranslationIds($existing)[$language] ?? null;
-
-        if ($translationId === null) {
-            return;
-        }
-
-        $result = $this->client->deleteTranslation($translationId);
-        if (is_wp_error($result)) {
-            $this->logError('remove_translation', $result);
         }
     }
 
