@@ -123,10 +123,18 @@ class DocumentSync
                 'languages' => array_keys($translations),
                 'published_at' => $source->post_date,
                 'modified_at' => $source->post_modified,
-                'taxonomies' => $this->getAllTaxonomyTerms($source),
                 'featured_image_url' => get_the_post_thumbnail_url($source, 'full') ?: '',
             ],
         ];
+
+        // A field per taxonomy rather than one nested map. Metadata values are flat lists of
+        // strings, so a map of lists cannot be stored — and a named field per taxonomy is what
+        // makes categories and tags usable as filters. Keys already set above win.
+        foreach ($this->getAllTaxonomyTerms($source) as $taxonomy => $terms) {
+            if (! array_key_exists($taxonomy, $attributes['meta_data'])) {
+                $attributes['meta_data'][$taxonomy] = $terms;
+            }
+        }
 
         if (! $isAttachment) {
             $attributes['content'] = $this->buildContent($source);
@@ -457,10 +465,19 @@ class DocumentSync
     private function getAllTaxonomyTerms(\WP_Post $post): array
     {
         $result = [];
-        foreach (get_object_taxonomies($post->post_type, 'names') as $taxonomy) {
+
+        foreach (get_object_taxonomies($post->post_type, 'objects') as $taxonomy => $definition) {
+            // Non-public taxonomies are plumbing, not content: Polylang keeps a post's language
+            // and its translation group in `language` and `post_translations`, which are neither
+            // useful to filter on nor meaningful to a reader.
+            if (empty($definition->public)) {
+                continue;
+            }
+
             $terms = get_the_terms($post->ID, $taxonomy);
+
             if ($terms && ! is_wp_error($terms)) {
-                $result[$taxonomy] = wp_list_pluck($terms, 'name');
+                $result[$taxonomy] = array_values(wp_list_pluck($terms, 'name'));
             }
         }
 
