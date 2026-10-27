@@ -29,6 +29,10 @@ if (! class_exists('WP_Post')) {
 
         public string $post_status = 'publish';
 
+        public string $post_password = '';
+
+        public int $post_parent = 0;
+
         public string $post_date = '';
 
         public string $post_modified = '';

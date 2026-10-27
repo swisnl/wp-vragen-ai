@@ -35,7 +35,10 @@ class DocumentSync
 
         if ($this->shouldSyncPost($post)) {
             as_schedule_single_action(time(), 'vragenai_sync_post', ['post_id' => $postId], 'vragenai');
-        } elseif (in_array($post->post_status, ['trash', 'draft'], true)) {
+        } elseif (in_array($post->post_status, ['trash', 'draft', 'private', 'pending'], true) || $post->post_password !== '') {
+            // A post that leaves a syncable state must drop any document an earlier
+            // publish created. A password-protected post keeps post_status 'publish',
+            // so that transition is caught on post_password, not on the status list.
             // Resolve the translation group now, while the post still exists.
             as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
         }
@@ -74,6 +77,10 @@ class DocumentSync
      */
     public function syncPostDirectly(\WP_Post $post): void
     {
+        if (! $this->shouldSyncPost($post)) {
+            return;
+        }
+
         $this->upsertDocument($post);
     }
 
@@ -336,9 +343,33 @@ class DocumentSync
     private function shouldSyncPost(\WP_Post $post): bool
     {
         if ($this->isStandaloneAttachment($post)) {
-            return in_array($post->post_status, ['inherit', 'publish'], true);
+            return $this->shouldSyncAttachment($post);
         }
 
-        return $post->post_status === 'publish';
+        // A password-protected post keeps post_status 'publish' — the protection
+        // lives in post_password — so gating on status alone would send its body
+        // to the knowledge base.
+        return $post->post_status === 'publish' && $post->post_password === '';
+    }
+
+    /**
+     * An attachment carries its own post_status ('inherit'/'publish'), not its
+     * parent's visibility, so gate it on the parent: an attachment of a draft,
+     * private or password-protected post must not be indexed. Parentless
+     * (media-library) uploads have no parent gate to inherit and sync as before.
+     */
+    private function shouldSyncAttachment(\WP_Post $post): bool
+    {
+        if (! in_array($post->post_status, ['inherit', 'publish'], true)) {
+            return false;
+        }
+
+        if ($post->post_parent === 0) {
+            return true;
+        }
+
+        $parent = get_post($post->post_parent);
+
+        return $parent instanceof \WP_Post && $this->shouldSyncPost($parent);
     }
 }
