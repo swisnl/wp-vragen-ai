@@ -113,7 +113,9 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 == Changelog ==
 
 = 2.1.2 =
-* Fix: password-protected posts and their attachments are no longer sent to the vragen.ai knowledge base, and a post that becomes password-protected or private is removed from it.
+* Fix: password-protected posts are no longer indexed in the vragen.ai knowledge base.
+
+Thanks to Marish Pasco for finding and reporting this.
 
 = 2.1.1 =
 * New: native ACF content support for supported regular fields and stored ACF block fields.
