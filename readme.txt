@@ -2,9 +2,9 @@
 Contributors: vragenai
 Tags: search, ai, knowledge base, sync, multilingual
 Requires at least: 6.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,6 +112,9 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 
 == Changelog ==
 
+= 2.1.2 =
+* Fix: password-protected posts and their attachments are no longer sent to the vragen.ai knowledge base, and a post that becomes password-protected or private is removed from it.
+
 = 2.1.1 =
 * New: native ACF content support for supported regular fields and stored ACF block fields.
 * New: ACF file fields can contribute PDF URLs for server-side extraction by vragen.ai.
@@ -127,6 +130,9 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 * Initial public release.
 
 == Upgrade Notice ==
+
+= 2.1.2 =
+Security fix: password-protected content is no longer indexed in the knowledge base.
 
 = 2.1.1 =
 Adds native ACF content support and ACF PDF file-field indexing.
