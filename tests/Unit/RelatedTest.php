@@ -25,6 +25,7 @@ class RelatedTest extends TestCase
         Functions\when('get_the_ID')->justReturn(100);
         Functions\when('get_permalink')->alias(static fn ($id): string => 'https://example.test/?p='.$id);
         Functions\when('get_the_title')->alias(static fn ($id): string => 'Post '.$id);
+        Functions\when('is_post_publicly_viewable')->justReturn(true);
         Functions\when('esc_url')->returnArg(1);
         Functions\when('esc_html')->returnArg(1);
         Functions\when('esc_attr')->returnArg(1);
@@ -138,5 +139,42 @@ class RelatedTest extends TestCase
         $html = (new Related(new SearchService($client)))->renderBlock([]);
 
         $this->assertStringContainsString('nog geen gerelateerde content', $html);
+    }
+
+    public function test_skips_posts_that_are_not_publicly_viewable(): void
+    {
+        $this->stubSite();
+        // A hit can resolve to a post the visitor may not see (a stale document
+        // for a scheduled or custom-status post, or one since deleted). 88 is such
+        // a post; 55 is public and must still render.
+        Functions\when('is_post_publicly_viewable')->alias(static fn ($id): bool => (int) $id !== 88);
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('similarDocuments')->once()->andReturn($this->similarResponse());
+
+        $html = (new Related(new SearchService($client)))->renderBlock([]);
+
+        $this->assertStringContainsString('?p=55', $html);
+        $this->assertStringNotContainsString('?p=88', $html);
+    }
+
+    public function test_skips_password_protected_posts(): void
+    {
+        $this->stubSite();
+        // is_post_publicly_viewable() returns true for a published password-protected
+        // post (the password, not the status, hides it), so the block must gate on
+        // the password itself. 88 is password-protected; 55 is public.
+        Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post([
+            'ID' => (int) $id,
+            'post_password' => (int) $id === 88 ? 'hunter2' : '',
+        ]));
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('similarDocuments')->once()->andReturn($this->similarResponse());
+
+        $html = (new Related(new SearchService($client)))->renderBlock([]);
+
+        $this->assertStringContainsString('?p=55', $html);
+        $this->assertStringNotContainsString('?p=88', $html);
     }
 }

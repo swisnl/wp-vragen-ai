@@ -4,7 +4,7 @@ Tags: search, ai, knowledge base, sync, multilingual
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,6 +112,15 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 
 == Changelog ==
 
+= 2.1.3 =
+* Fix: the related content block, the `[vragenai_related]` shortcode and semantic native search no longer list posts a visitor may not see: scheduled, private, pending, a non-public custom status, or password-protected.
+* Fix: a published post that is rescheduled, moved to a non-public custom status or password-protected is removed from the vragen.ai knowledge base, alongside the existing draft, private, pending and trashed transitions.
+* Fix: when a post is unpublished, trashed or password-protected, the documents for its attached media are re-evaluated and removed too, instead of lingering until the next full sync.
+* Fix: a media-library attachment with its own password is no longer indexed.
+* Fix: `wp vragenai sync` now honours the `vragenai_should_index_post` filter, so content a site excludes is not re-indexed by a full sync.
+
+Thanks to Marish Pasco for finding and reporting these.
+
 = 2.1.2 =
 * Fix: password-protected posts are no longer indexed in the vragen.ai knowledge base.
 
@@ -132,6 +141,9 @@ Thanks to Marish Pasco for finding and reporting this.
 * Initial public release.
 
 == Upgrade Notice ==
+
+= 2.1.3 =
+Security fix: related content and native search no longer list posts a visitor cannot open, including password-protected posts.
 
 = 2.1.2 =
 Security fix: password-protected content is no longer indexed in the knowledge base.

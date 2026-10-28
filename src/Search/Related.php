@@ -194,9 +194,22 @@ class Related
 
         $items = [];
         foreach (array_slice($result['ids'], 0, $count) as $id) {
+            $id = (int) $id;
+            $post = get_post($id);
+
+            // A hit can resolve to a post the visitor may not see: a scheduled or
+            // custom-status post, one since deleted, or a password-protected post.
+            // is_post_publicly_viewable() covers status and type but returns true
+            // for a published password-protected post (the protection lives in
+            // post_password), so gate on the password too, matching the sync path.
+            // NativeSearch applies the same gate through post_status + has_password.
+            if (! $post instanceof \WP_Post || ! is_post_publicly_viewable($id) || $post->post_password !== '') {
+                continue;
+            }
+
             $url = get_permalink($id);
             if (is_string($url) && $url !== '') {
-                $items[] = ['id' => (int) $id, 'title' => (string) get_the_title($id), 'url' => $url];
+                $items[] = ['id' => $id, 'title' => (string) get_the_title($id), 'url' => $url];
             }
         }
 
