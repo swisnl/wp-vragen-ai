@@ -84,6 +84,10 @@ class NativeSearch
         return get_posts([
             'post_type' => $postTypes !== [] ? $postTypes : 'any',
             'post_status' => 'publish',
+            // A stale hit can resolve to a password-protected post (status stays
+            // 'publish'); exclude those so native search never lists content the
+            // visitor cannot open, matching the related block's own gate.
+            'has_password' => false,
             'post__in' => $result['ids'],
             'orderby' => 'post__in',
             'posts_per_page' => count($result['ids']),

@@ -13,8 +13,15 @@ use VragenAI\LanguageResolver;
  * where the canonical ID is the default-language post. A search hit is resolved
  * back by stripping that prefix and asking {@see LanguageResolver} for the
  * translation in the visitor's current language (falling back to the canonical
- * post when configured). Results that don't originate from this site, or whose
- * post no longer exists in the wanted language, are dropped.
+ * post when configured). A hit whose reference lacks the prefix, or whose post
+ * no longer exists in the wanted language, is dropped.
+ *
+ * The reference carries no site identifier, so this does not distinguish a
+ * document from a different WordPress install sharing the same tenant: a foreign
+ * `wp_post_{id}` resolves against this site's post of that ID. Callers that
+ * render a resolved post therefore apply their own visibility checks — see
+ * {@see Related::resolveItems()}; {@see NativeSearch} re-queries
+ * through WordPress with post_status=publish.
  *
  * All public methods return null on any failure (not configured, API error,
  * timeout) so callers can fall back to WordPress' native behaviour.
