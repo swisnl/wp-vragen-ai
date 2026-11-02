@@ -168,7 +168,7 @@ class DocumentSync
                 'post_type' => $source->post_type,
                 'post_format' => get_post_format($source) ?: 'standard',
                 'canonical_language' => $canonicalLanguage,
-                'languages' => $isAttachment ? [$canonicalLanguage] : $this->visibleLanguages($translations, $canonicalLanguage),
+                'languages' => $isAttachment ? [$canonicalLanguage] : ($this->visibleLanguages($translations) ?: [$canonicalLanguage]),
                 'published_at' => $source->post_date,
                 'modified_at' => $source->post_modified,
                 'taxonomies' => $this->getAllTaxonomyTerms($source),
@@ -207,15 +207,15 @@ class DocumentSync
     }
 
     /**
-     * The languages the document should advertise: only translations an
-     * anonymous visitor can actually see, so an in-progress draft or a
-     * password-protected translation is not announced in the knowledge base.
-     * Falls back to the canonical language so a document always lists its own.
+     * The languages of a translation group an anonymous visitor can actually
+     * see, so an in-progress draft or a password-protected translation is not
+     * announced in the knowledge base. Shared by the upsert and removal paths so
+     * they advertise the same set.
      *
      * @param  array<string, int>  $translations
      * @return list<string>
      */
-    private function visibleLanguages(array $translations, string $canonicalLanguage): array
+    private function visibleLanguages(array $translations): array
     {
         $languages = [];
         foreach ($translations as $language => $postId) {
@@ -225,7 +225,7 @@ class DocumentSync
             }
         }
 
-        return $languages !== [] ? $languages : [$canonicalLanguage];
+        return $languages;
     }
 
     /**
@@ -255,8 +255,10 @@ class DocumentSync
             'external_reference' => 'wp_post_'.$this->languageResolver->getCanonicalPostId($post),
             'language' => $language,
             'canonical_language' => $this->languageResolver->getDefaultLanguage(),
+            // Only the still-visible translations, so removing one language does
+            // not re-advertise a hidden one back into meta_data.languages.
             'remaining_languages' => array_values(array_filter(
-                array_keys($translations),
+                $this->visibleLanguages($translations),
                 static fn (string $lang): bool => $lang !== $language,
             )),
         ];
@@ -409,11 +411,14 @@ class DocumentSync
             return $this->shouldSyncAttachment($post);
         }
 
-        // Index only published, unprotected posts. The post type is already
-        // gated by the admin's enabled-types choice, so (unlike the read paths)
-        // we do not re-check post-type viewability here; we only share the
-        // membership veto, so sync and display agree on gated content.
-        return PostVisibility::vetoable($post->post_status === 'publish' && $post->post_password === '', $post);
+        // Index only published, unprotected posts. The post type is already gated
+        // by the admin's enabled-types choice, so (unlike the read paths) we do
+        // not re-check post-type viewability here. The membership veto can narrow
+        // this, but the hard gate sits outside it so a filter cannot widen a
+        // hidden post into the index.
+        return $post->post_status === 'publish'
+            && $post->post_password === ''
+            && PostVisibility::vetoable(true, $post);
     }
 
     // An attachment's own status is not its parent's visibility, so gate on the parent;
@@ -425,7 +430,7 @@ class DocumentSync
             && $post->post_password === ''
             && ($post->post_parent === 0 || $this->parentIsSyncable($post->post_parent));
 
-        return PostVisibility::vetoable($syncable, $post);
+        return $syncable && PostVisibility::vetoable(true, $post);
     }
 
     private function parentIsSyncable(int $parentId): bool

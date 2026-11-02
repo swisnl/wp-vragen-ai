@@ -121,10 +121,22 @@ class DocumentSyncSelectionTest extends TestCase
         $this->assertTrue($this->shouldSyncPost(new \WP_Post(['post_status' => 'publish'])));
     }
 
+    public function test_widening_filter_cannot_force_index_a_draft(): void
+    {
+        // A membership filter that reveals content must not push a non-published
+        // post into the index: the hard status gate sits outside the veto.
+        Functions\when('apply_filters')->alias(
+            static fn (string $hook, mixed $value = null, mixed $post = null): mixed => $hook === 'vragenai_post_is_visible' ? true : $value,
+        );
+
+        $this->assertFalse($this->shouldSyncPost(new \WP_Post(['post_status' => 'draft'])));
+    }
+
     public function test_sync_post_directly_removes_document_for_non_syncable_post(): void
     {
         Functions\when('get_locale')->justReturn('nl');
         Functions\when('is_wp_error')->alias(static fn ($thing): bool => $thing instanceof \WP_Error);
+        Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id, 'post_status' => 'publish']));
 
         $client = Mockery::mock(ApiClient::class);
         $client->shouldReceive('findByExternalReference')
@@ -179,6 +191,7 @@ class DocumentSyncSelectionTest extends TestCase
             'post_password' => 'hunter2',
         ]);
 
+        Functions\when('get_post')->justReturn($post);
         (new DocumentSync(Mockery::mock(ApiClient::class)))->onSavePost(5, $post);
     }
 
@@ -216,6 +229,7 @@ class DocumentSyncSelectionTest extends TestCase
             'post_status' => 'future',
         ]);
 
+        Functions\when('get_post')->justReturn($post);
         (new DocumentSync(Mockery::mock(ApiClient::class)))->onSavePost(5, $post);
     }
 
@@ -235,6 +249,7 @@ class DocumentSyncSelectionTest extends TestCase
             'post_status' => 'in-review',
         ]);
 
+        Functions\when('get_post')->justReturn($post);
         (new DocumentSync(Mockery::mock(ApiClient::class)))->onSavePost(5, $post);
     }
 
@@ -245,6 +260,7 @@ class DocumentSyncSelectionTest extends TestCase
         Functions\when('apply_filters')->alias(
             static fn (string $hook, mixed $value = null, mixed $arg = null): mixed => $hook === 'vragenai_should_index_post' ? false : $value,
         );
+        Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id, 'post_status' => 'publish']));
 
         $client = Mockery::mock(ApiClient::class);
         $client->shouldReceive('findByExternalReference')

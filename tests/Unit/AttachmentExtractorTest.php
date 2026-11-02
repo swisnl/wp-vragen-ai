@@ -74,4 +74,30 @@ class AttachmentExtractorTest extends TestCase
             $result
         );
     }
+
+    public function test_skips_a_password_protected_acf_file_field_pdf(): void
+    {
+        Functions\when('get_attached_media')->justReturn([]);
+        Functions\when('get_field_objects')->justReturn([
+            'secret' => [
+                'type' => 'file',
+                'value' => ['ID' => 7, 'url' => 'https://example.test/secret.pdf', 'mime_type' => 'application/pdf', 'filename' => 'secret.pdf'],
+            ],
+            'public' => [
+                'type' => 'file',
+                'value' => ['ID' => 8, 'url' => 'https://example.test/public.pdf', 'mime_type' => 'application/pdf', 'filename' => 'public.pdf'],
+            ],
+        ]);
+        Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post([
+            'ID' => (int) $id,
+            'post_password' => (int) $id === 7 ? 'secret' : '',
+        ]));
+
+        $result = (new AttachmentExtractor)->extract(new \WP_Post(['ID' => 11]));
+
+        $this->assertSame(
+            [['url' => 'https://example.test/public.pdf', 'filename' => 'public.pdf']],
+            $result
+        );
+    }
 }

@@ -19,7 +19,9 @@ final class PostVisibility
      * Apply the site's own visibility rule to an already-computed verdict. This
      * is the single seam for capability- or membership-gated content (paywall
      * plugins), which WordPress keeps on status 'publish' and so hides from no
-     * core check. A site can both hide ($public true -> false) and reveal.
+     * core check. On the read paths a filter can both hide and reveal; the sync
+     * gate ANDs the hard status/password check around this, so there a filter can
+     * only hide, never force a draft or protected post into the index.
      */
     public static function vetoable(bool $public, \WP_Post $post): bool
     {

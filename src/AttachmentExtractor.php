@@ -70,6 +70,16 @@ class AttachmentExtractor
                 continue;
             }
 
+            // Same guard as a directly attached PDF: an ACF-referenced file can
+            // carry its own password, and its text must not reach the knowledge base.
+            $attachmentId = (int) ($value['ID'] ?? 0);
+            if ($attachmentId > 0) {
+                $attachment = get_post($attachmentId);
+                if ($attachment instanceof \WP_Post && $attachment->post_password !== '') {
+                    continue;
+                }
+            }
+
             $seen[$url] = true;
             $out[] = [
                 'url' => $url,
