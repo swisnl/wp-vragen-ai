@@ -16,7 +16,7 @@ Whenever a post is published, updated, trashed or deleted, the plugin queues a b
 - Embed a vragen.ai deployment (page, popup or popover) with the **Vragen.ai** block, or load one site-wide from the settings screen.
 - Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
 - Show related content for the current post with the **Vragen.ai related content** block or the `[vragenai_related]` shortcode.
-- Filters (`vragenai_should_index_post`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
+- Filters (`vragenai_should_index_post`, `vragenai_post_is_visible`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 ## Requirements
 
@@ -121,6 +121,12 @@ Show content related to the current post, powered by vragen.ai's similarity sear
 - **`[vragenai_related]` shortcode** — for the classic editor or templates, e.g. `[vragenai_related items="6" layout="cards"]`.
 
 Related content uses the source post's synced document, so the post must already be synced. When there are no results (or the post isn't synced) nothing is shown to visitors.
+
+## Content visibility
+
+Only publicly visible posts are indexed and shown: draft, pending, scheduled, private, trashed, non-public custom statuses and password-protected posts are skipped on both the sync and the read paths (sync, related content and native search). For content a plugin gates by role or membership, return `false` from a `vragenai_post_is_visible` filter and the post is kept out of all three at once. Returning `false` to hide is the safe use; returning `true` on the read paths can also reveal an otherwise-hidden post, so reserve that for when you intend to.
+
+One limitation: a post is indexed whole. Content is rendered in a background job without a logged-in visitor, so gating only **part** of an otherwise public post (a members-only section or block, a conditional field) may not take effect at index time. For section-level gating, strip the restricted content with `vragenai_document_render_content_source` or `vragenai_document_content_fragments`, drop specific ACF fields with `vragenai_include_acf_field`, or exclude the whole post with `vragenai_post_is_visible` / `vragenai_should_index_post`.
 
 ## Embedding Vragen.ai
 

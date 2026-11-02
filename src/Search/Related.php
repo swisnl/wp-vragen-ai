@@ -3,6 +3,7 @@
 namespace VragenAI\Search;
 
 use VragenAI\ApiClient;
+use VragenAI\PostVisibility;
 
 /**
  * "Related content" for the current post, powered by the vragen.ai similar
@@ -194,9 +195,17 @@ class Related
 
         $items = [];
         foreach (array_slice($result['ids'], 0, $count) as $id) {
+            $id = (int) $id;
+            $post = get_post($id);
+
+            // A hit can resolve to a post the visitor may not see (scheduled, deleted, protected, gated).
+            if (! $post instanceof \WP_Post || ! PostVisibility::isPublic($post)) {
+                continue;
+            }
+
             $url = get_permalink($id);
             if (is_string($url) && $url !== '') {
-                $items[] = ['id' => (int) $id, 'title' => (string) get_the_title($id), 'url' => $url];
+                $items[] = ['id' => $id, 'title' => (string) get_the_title($id), 'url' => $url];
             }
         }
 

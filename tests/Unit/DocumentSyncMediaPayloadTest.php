@@ -65,4 +65,79 @@ class DocumentSyncMediaPayloadTest extends TestCase
         $sync = new DocumentSync($client, $languageResolver, $attachmentExtractor);
         $sync->syncPost(42);
     }
+
+    public function test_meta_data_languages_lists_only_visible_translations(): void
+    {
+        Functions\when('get_post')->alias(static fn (int $postId) => new \WP_Post([
+            'ID' => $postId,
+            'post_status' => 'publish',
+            'post_type' => 'post',
+            'post_title' => 'Title '.$postId,
+        ]));
+        // The EN translation (id 6) is not publicly viewable (still a draft).
+        Functions\when('is_post_publicly_viewable')->alias(static fn (\WP_Post $post): bool => $post->ID !== 6);
+        Functions\when('apply_filters')->alias(static fn (...$args) => $args[1] ?? null);
+        Functions\when('get_userdata')->justReturn((object) ['display_name' => 'Admin']);
+        Functions\when('get_post_format')->justReturn(false);
+        Functions\when('get_object_taxonomies')->justReturn([]);
+        Functions\when('get_the_post_thumbnail_url')->justReturn(false);
+        Functions\when('get_permalink')->justReturn('https://example.test/nl/post-5');
+        Functions\when('esc_html')->returnArg(1);
+        Functions\when('is_wp_error')->justReturn(false);
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('findByExternalReference')->with('wp_post_5')->andReturn(['data' => []]);
+        $client->shouldReceive('createDocument')
+            ->once()
+            ->with(Mockery::on(static fn (array $attributes): bool => ($attributes['meta_data']['languages'] ?? null) === ['nl']))
+            ->andReturn([]);
+
+        $languageResolver = Mockery::mock(LanguageResolver::class);
+        $languageResolver->shouldReceive('getDefaultLanguage')->andReturn('nl');
+        $languageResolver->shouldReceive('getTranslations')->andReturn(['nl' => 5, 'en' => 6]);
+        $languageResolver->shouldReceive('getCanonicalPostId')->andReturn(5);
+
+        $attachmentExtractor = Mockery::mock(AttachmentExtractor::class);
+        $attachmentExtractor->shouldReceive('extract')->andReturn([]);
+
+        (new DocumentSync($client, $languageResolver, $attachmentExtractor))->syncPost(5);
+    }
+
+    public function test_meta_data_languages_falls_back_to_canonical_when_no_translation_is_visible(): void
+    {
+        Functions\when('get_post')->alias(static fn (int $postId) => new \WP_Post([
+            'ID' => $postId,
+            'post_status' => 'publish',
+            'post_type' => 'post',
+            'post_title' => 'Title '.$postId,
+        ]));
+        // No translation passes the read-side viewability check (e.g. an enabled
+        // non-queryable CPT); the write gate still syncs, and languages must not be empty.
+        Functions\when('is_post_publicly_viewable')->justReturn(false);
+        Functions\when('apply_filters')->alias(static fn (...$args) => $args[1] ?? null);
+        Functions\when('get_userdata')->justReturn((object) ['display_name' => 'Admin']);
+        Functions\when('get_post_format')->justReturn(false);
+        Functions\when('get_object_taxonomies')->justReturn([]);
+        Functions\when('get_the_post_thumbnail_url')->justReturn(false);
+        Functions\when('get_permalink')->justReturn('https://example.test/nl/post-5');
+        Functions\when('esc_html')->returnArg(1);
+        Functions\when('is_wp_error')->justReturn(false);
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('findByExternalReference')->with('wp_post_5')->andReturn(['data' => []]);
+        $client->shouldReceive('createDocument')
+            ->once()
+            ->with(Mockery::on(static fn (array $attributes): bool => ($attributes['meta_data']['languages'] ?? null) === ['nl']))
+            ->andReturn([]);
+
+        $languageResolver = Mockery::mock(LanguageResolver::class);
+        $languageResolver->shouldReceive('getDefaultLanguage')->andReturn('nl');
+        $languageResolver->shouldReceive('getTranslations')->andReturn(['nl' => 5, 'en' => 6]);
+        $languageResolver->shouldReceive('getCanonicalPostId')->andReturn(5);
+
+        $attachmentExtractor = Mockery::mock(AttachmentExtractor::class);
+        $attachmentExtractor->shouldReceive('extract')->andReturn([]);
+
+        (new DocumentSync($client, $languageResolver, $attachmentExtractor))->syncPost(5);
+    }
 }

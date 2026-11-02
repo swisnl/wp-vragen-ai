@@ -30,6 +30,7 @@ class NativeSearchTest extends TestCase
         Functions\when('is_wp_error')->alias(static fn ($thing): bool => $thing instanceof \WP_Error);
         Functions\when('wp_json_encode')->alias(static fn ($data): string => (string) json_encode($data));
         Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id]));
+        Functions\when('is_post_publicly_viewable')->justReturn(true);
         Functions\when('apply_filters')->returnArg(2);
         Functions\when('get_posts')->alias(static fn (array $args): array => array_map(
             static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id]),
@@ -63,6 +64,51 @@ class NativeSearchTest extends TestCase
         $this->assertSame([42, 7], array_map(static fn (\WP_Post $p): int => $p->ID, $posts));
         $this->assertSame(2, $query->found_posts);
         $this->assertSame(1, $query->max_num_pages);
+    }
+
+    public function test_query_excludes_unpublished_and_password_protected_posts(): void
+    {
+        $this->stubSite();
+        $captured = null;
+        Functions\when('get_posts')->alias(function (array $args) use (&$captured): array {
+            $captured = $args;
+
+            return array_map(static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id]), $args['post__in'] ?? []);
+        });
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('searchDocuments')->once()->andReturn([
+            'data' => [['attributes' => ['external_reference' => 'wp_post_42']]],
+            'meta' => ['total' => 1],
+        ]);
+
+        $this->nativeSearch($client)->maybeShortCircuit(null, new \WP_Query(['s' => 'hello', 'posts_per_page' => 10, 'paged' => 1]));
+
+        $this->assertSame('publish', $captured['post_status'] ?? null);
+        $this->assertFalse($captured['has_password'] ?? null);
+    }
+
+    public function test_drops_results_vetoed_by_the_post_is_visible_filter(): void
+    {
+        $this->stubSite();
+        Functions\when('apply_filters')->alias(
+            static fn (string $hook, mixed $value = null, mixed $arg = null): mixed => $hook === 'vragenai_post_is_visible' && $arg instanceof \WP_Post && $arg->ID === 7 ? false : $value,
+        );
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('searchDocuments')->once()->andReturn([
+            'data' => [
+                ['attributes' => ['external_reference' => 'wp_post_42']],
+                ['attributes' => ['external_reference' => 'wp_post_7']],
+            ],
+            'meta' => ['total' => 2],
+        ]);
+
+        $query = new \WP_Query(['s' => 'hello', 'posts_per_page' => 10, 'paged' => 1]);
+
+        $posts = $this->nativeSearch($client)->maybeShortCircuit(null, $query);
+
+        $this->assertSame([42], array_map(static fn (\WP_Post $p): int => $p->ID, $posts));
     }
 
     public function test_ignores_queries_that_are_not_a_front_end_main_search(): void

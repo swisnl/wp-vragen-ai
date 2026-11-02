@@ -29,35 +29,52 @@ class DocumentSync
         $settings = (array) get_option('vragenai_settings', []);
         $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
 
+        // save_post fires for the parent only; re-evaluate its attachments, whose indexability follows it.
+        if ($post->post_type !== 'attachment' && in_array('attachment', $enabledTypes, true)) {
+            $this->reevaluateChildAttachments($postId);
+        }
+
         if (! in_array($post->post_type, $enabledTypes, true)) {
             return;
         }
 
         if ($this->shouldSyncPost($post)) {
             as_schedule_single_action(time(), 'vragenai_sync_post', ['post_id' => $postId], 'vragenai');
-        } elseif (in_array($post->post_status, ['trash', 'draft', 'private', 'pending'], true) || $post->post_password !== '') {
-            // A post that leaves a syncable state must drop any document an earlier
-            // publish created. A password-protected post keeps post_status 'publish',
-            // so that transition is caught on post_password, not on the status list.
-            // Resolve the translation group now, while the post still exists.
+        } else {
+            // No longer syncable: drop any document an earlier publish left (no-op if never synced).
             as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
         }
     }
 
     public function onDeletePost(int $postId): void
     {
-        // before_delete_post fires before the row is removed, so translation
-        // links are still resolvable here.
+        // before_delete_post fires before the row is gone, so translations still resolve.
         $post = get_post($postId);
-        if ($post instanceof \WP_Post) {
-            as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
+        if (! $post instanceof \WP_Post) {
+            return;
+        }
+
+        as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
+
+        // Attachments outlive their parent's deletion, so re-evaluate them too.
+        $settings = (array) get_option('vragenai_settings', []);
+        $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
+        if ($post->post_type !== 'attachment' && in_array('attachment', $enabledTypes, true)) {
+            $this->reevaluateChildAttachments($postId);
         }
     }
 
     public function syncPost(int $postId): void
     {
         $post = get_post($postId);
-        if (! $post || ! $this->shouldSyncPost($post)) {
+        if (! $post) {
+            return;
+        }
+
+        // No longer syncable: remove any document it left behind.
+        if (! $this->shouldSyncPost($post)) {
+            $this->removeTranslation($this->buildRemovalPayload($post));
+
             return;
         }
 
@@ -77,11 +94,37 @@ class DocumentSync
      */
     public function syncPostDirectly(\WP_Post $post): void
     {
+        // No longer syncable: remove any document it left behind.
         if (! $this->shouldSyncPost($post)) {
+            $this->removeTranslation($this->buildRemovalPayload($post));
+
+            return;
+        }
+
+        // Honour the force-exclude filter here too, matching syncPost().
+        if (! (bool) apply_filters('vragenai_should_index_post', true, $post)) {
+            $this->removeTranslation($this->buildRemovalPayload($post));
+
             return;
         }
 
         $this->upsertDocument($post);
+    }
+
+    // Queue each attachment of a post for a sync; syncPost() self-heals, removing or recreating its document.
+    private function reevaluateChildAttachments(int $parentId): void
+    {
+        $childIds = get_posts([
+            'post_type' => 'attachment',
+            'post_parent' => $parentId,
+            'post_status' => 'any',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ]);
+
+        foreach ((array) $childIds as $childId) {
+            as_schedule_single_action(time(), 'vragenai_sync_post', ['post_id' => (int) $childId], 'vragenai');
+        }
     }
 
     private function upsertDocument(\WP_Post $post): void
@@ -92,9 +135,7 @@ class DocumentSync
         $externalRef = 'wp_post_'.$post->ID;
 
         if (! $this->isStandaloneAttachment($post)) {
-            // All translations of a post share one document, keyed on the canonical
-            // (default-language) post. Content is sourced from that translation;
-            // meta_data.languages advertises every language the group is available in.
+            // All translations share one document keyed on the canonical (default-language) post.
             $translations = $this->languageResolver->getTranslations($post);
             $canonicalPostId = $this->languageResolver->getCanonicalPostId($post);
 
@@ -127,7 +168,7 @@ class DocumentSync
                 'post_type' => $source->post_type,
                 'post_format' => get_post_format($source) ?: 'standard',
                 'canonical_language' => $canonicalLanguage,
-                'languages' => array_keys($translations),
+                'languages' => $isAttachment ? [$canonicalLanguage] : ($this->visibleLanguages($translations) ?: [$canonicalLanguage]),
                 'published_at' => $source->post_date,
                 'modified_at' => $source->post_modified,
                 'taxonomies' => $this->getAllTaxonomyTerms($source),
@@ -166,6 +207,28 @@ class DocumentSync
     }
 
     /**
+     * The languages of a translation group an anonymous visitor can actually
+     * see, so an in-progress draft or a password-protected translation is not
+     * announced in the knowledge base. Shared by the upsert and removal paths so
+     * they advertise the same set.
+     *
+     * @param  array<string, int>  $translations
+     * @return list<string>
+     */
+    private function visibleLanguages(array $translations): array
+    {
+        $languages = [];
+        foreach ($translations as $language => $postId) {
+            $post = get_post($postId);
+            if ($post instanceof \WP_Post && PostVisibility::isPublic($post)) {
+                $languages[] = (string) $language;
+            }
+        }
+
+        return $languages;
+    }
+
+    /**
      * Snapshot of the translation group needed to remove one translation.
      * Resolved while the post still exists so the async handler does not
      * depend on it.
@@ -192,8 +255,10 @@ class DocumentSync
             'external_reference' => 'wp_post_'.$this->languageResolver->getCanonicalPostId($post),
             'language' => $language,
             'canonical_language' => $this->languageResolver->getDefaultLanguage(),
+            // Only the still-visible translations, so removing one language does
+            // not re-advertise a hidden one back into meta_data.languages.
             'remaining_languages' => array_values(array_filter(
-                array_keys($translations),
+                $this->visibleLanguages($translations),
                 static fn (string $lang): bool => $lang !== $language,
             )),
         ];
@@ -346,29 +411,31 @@ class DocumentSync
             return $this->shouldSyncAttachment($post);
         }
 
-        // A password-protected post keeps post_status 'publish' — the protection
-        // lives in post_password — so gating on status alone would send its body
-        // to the knowledge base.
-        return $post->post_status === 'publish' && $post->post_password === '';
+        // Index only published, unprotected posts. The post type is already gated
+        // by the admin's enabled-types choice, so (unlike the read paths) we do
+        // not re-check post-type viewability here. The membership veto can narrow
+        // this, but the hard gate sits outside it so a filter cannot widen a
+        // hidden post into the index.
+        return $post->post_status === 'publish'
+            && $post->post_password === ''
+            && PostVisibility::vetoable(true, $post);
     }
 
-    /**
-     * An attachment carries its own post_status ('inherit'/'publish'), not its
-     * parent's visibility, so gate it on the parent: an attachment of a draft,
-     * private or password-protected post must not be indexed. Parentless
-     * (media-library) uploads have no parent gate to inherit and sync as before.
-     */
+    // An attachment's own status is not its parent's visibility, so gate on the parent;
+    // an attachment may also carry its own password. Parentless uploads sync unless protected.
+    // The membership veto is applied to the attachment itself, matching the read paths.
     private function shouldSyncAttachment(\WP_Post $post): bool
     {
-        if (! in_array($post->post_status, ['inherit', 'publish'], true)) {
-            return false;
-        }
+        $syncable = in_array($post->post_status, ['inherit', 'publish'], true)
+            && $post->post_password === ''
+            && ($post->post_parent === 0 || $this->parentIsSyncable($post->post_parent));
 
-        if ($post->post_parent === 0) {
-            return true;
-        }
+        return $syncable && PostVisibility::vetoable(true, $post);
+    }
 
-        $parent = get_post($post->post_parent);
+    private function parentIsSyncable(int $parentId): bool
+    {
+        $parent = get_post($parentId);
 
         return $parent instanceof \WP_Post && $this->shouldSyncPost($parent);
     }

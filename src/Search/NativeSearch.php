@@ -2,6 +2,8 @@
 
 namespace VragenAI\Search;
 
+use VragenAI\PostVisibility;
+
 /**
  * Replaces WordPress' built-in search results with semantic results from
  * vragen.ai. Hooks posts_pre_query so the theme's existing search template,
@@ -81,15 +83,20 @@ class NativeSearch
             return [];
         }
 
-        return get_posts([
+        $posts = get_posts([
             'post_type' => $postTypes !== [] ? $postTypes : 'any',
             'post_status' => 'publish',
+            // Password-protected posts keep status 'publish', so exclude them in SQL.
+            'has_password' => false,
             'post__in' => $result['ids'],
             'orderby' => 'post__in',
             'posts_per_page' => count($result['ids']),
             'no_found_rows' => true,
             'ignore_sticky_posts' => true,
         ]);
+
+        // Also drop anything the site's own visibility rule vetoes (membership/paywall).
+        return array_values(array_filter($posts, [PostVisibility::class, 'isPublic']));
     }
 
     private function shouldHandle(\WP_Query $query): bool

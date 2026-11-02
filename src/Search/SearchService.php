@@ -9,15 +9,14 @@ use VragenAI\LanguageResolver;
  * Read path over the vragen.ai search API: turns a query (or a source post)
  * into an ordered list of WordPress post IDs.
  *
- * Every synced document is keyed on `external_reference = wp_post_{canonicalId}`
- * where the canonical ID is the default-language post. A search hit is resolved
- * back by stripping that prefix and asking {@see LanguageResolver} for the
- * translation in the visitor's current language (falling back to the canonical
- * post when configured). Results that don't originate from this site, or whose
- * post no longer exists in the wanted language, are dropped.
+ * Documents are keyed on `external_reference = wp_post_{canonicalId}` (the
+ * default-language post). A hit is resolved back to the translation in the
+ * visitor's language, falling back to the canonical post when configured. The
+ * reference carries no site identifier, so callers apply their own visibility
+ * checks ({@see Related::resolveItems()}, {@see NativeSearch}).
  *
- * All public methods return null on any failure (not configured, API error,
- * timeout) so callers can fall back to WordPress' native behaviour.
+ * All public methods return null on any failure so callers can fall back to
+ * WordPress' native behaviour.
  */
 final class SearchService
 {

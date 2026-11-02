@@ -4,7 +4,7 @@ Tags: search, ai, knowledge base, sync, multilingual
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,7 +26,7 @@ Features:
 * Embed a vragen.ai deployment (page, popup or popover) with the Vragen.ai block, or load one site-wide from the settings screen.
 * Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
 * Show related content for the current post with the Vragen.ai related-content block or the `[vragenai_related]` shortcode.
-* Filters (`vragenai_should_index_post`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
+* Filters (`vragenai_should_index_post`, `vragenai_post_is_visible`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 The admin UI is available in English and Dutch, following your site language.
 
@@ -93,6 +93,12 @@ Yes. On **Settings → Vragen.ai**, enable replacing the native search. Your the
 
 Add the **Vragen.ai gerelateerde content** block to a post or template, or use the `[vragenai_related]` shortcode. It lists content semantically related to the current post (excluding the post itself). The post must already be synced to vragen.ai.
 
+= What content gets indexed, and how is visibility handled? =
+
+Only publicly visible posts are indexed and shown: the plugin skips draft, pending, scheduled, private, trashed, non-public custom statuses and password-protected posts, on both the sync and the read paths. For content a plugin gates by role or membership, add a `vragenai_post_is_visible` filter returning false for those posts, and they are kept out of indexing, related content and search together. Returning false to hide a post is the safe use; returning true on the read side can also reveal an otherwise-hidden post, so only do that when you mean to.
+
+One limitation to know: a post is indexed whole. The plugin renders a post's content in a background job, without a logged-in visitor, so if you hide only **part** of an otherwise public post (a members-only block or section, a conditional field), that part can still be rendered at index time even though a visitor does not see it on the page. If you use section-level gating, strip the restricted content before indexing with the `vragenai_document_render_content_source` or `vragenai_document_content_fragments` filters, exclude specific ACF fields with `vragenai_include_acf_field`, or keep the whole post out with `vragenai_post_is_visible` or `vragenai_should_index_post`.
+
 = The embed doesn't appear on a site with a Content Security Policy (CSP)? =
 
 If you use the Vragen.ai embed block or the site-wide embed, it loads a script from your vragen.ai instance and makes API calls to it, so a strict CSP must allow your vragen.ai domain:
@@ -111,6 +117,17 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 3. Your synced content, searchable with instant answers on vragen.ai.
 
 == Changelog ==
+
+= 2.1.3 =
+* Fix: the related content block, the `[vragenai_related]` shortcode and semantic native search no longer list posts a visitor may not see: scheduled, private, pending, a non-public custom status, or password-protected.
+* Fix: a published post that is rescheduled, moved to a non-public custom status or password-protected is removed from the vragen.ai knowledge base, alongside the existing draft, private, pending and trashed transitions.
+* Fix: when a post is unpublished, trashed or password-protected, the documents for its attached media are re-evaluated and removed too, instead of lingering until the next full sync.
+* Fix: a media-library attachment with its own password is no longer indexed, nor is a password-protected PDF pulled into an otherwise public post, whether directly attached or referenced through an ACF file field.
+* Fix: a document now advertises only the translations a visitor can see, so an unpublished or password-protected translation is no longer announced in the knowledge base.
+* Fix: `wp vragenai sync` now honours the `vragenai_should_index_post` filter, so content a site excludes is not re-indexed by a full sync.
+* Dev: new `vragenai_post_is_visible` filter, applied to indexing and the read paths (attachments included) from one shared check, so membership or paywall plugins can keep gated content out of the knowledge base, related content and search in one place.
+
+Thanks to Marish Pasco for finding and reporting these.
 
 = 2.1.2 =
 * Fix: password-protected posts are no longer indexed in the vragen.ai knowledge base.
@@ -132,6 +149,9 @@ Thanks to Marish Pasco for finding and reporting this.
 * Initial public release.
 
 == Upgrade Notice ==
+
+= 2.1.3 =
+Security fix: related content and native search no longer list posts a visitor cannot open, including password-protected posts.
 
 = 2.1.2 =
 Security fix: password-protected content is no longer indexed in the knowledge base.
