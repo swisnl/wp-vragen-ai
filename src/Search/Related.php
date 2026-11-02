@@ -197,12 +197,8 @@ class Related
             $id = (int) $id;
             $post = get_post($id);
 
-            // A hit can resolve to a post the visitor may not see: a scheduled or
-            // custom-status post, one since deleted, or a password-protected post.
-            // is_post_publicly_viewable() covers status and type but returns true
-            // for a published password-protected post (the protection lives in
-            // post_password), so gate on the password too, matching the sync path.
-            // NativeSearch applies the same gate through post_status + has_password.
+            // A hit can resolve to a post the visitor may not see (scheduled, deleted, protected).
+            // is_post_publicly_viewable() returns true for a password-protected post, so check that too.
             if (! $post instanceof \WP_Post || ! is_post_publicly_viewable($id) || $post->post_password !== '') {
                 continue;
             }

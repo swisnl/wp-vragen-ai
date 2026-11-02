@@ -29,11 +29,7 @@ class DocumentSync
         $settings = (array) get_option('vragenai_settings', []);
         $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
 
-        // An attachment's indexability follows its parent, but save_post fires only
-        // for the post that changed. When a parent's visibility changes its
-        // attachments keep their own documents until something re-evaluates them,
-        // so fan out to them here. Guarded to attachments being a synced type,
-        // since otherwise they have no standalone document to reconcile.
+        // save_post fires for the parent only; re-evaluate its attachments, whose indexability follows it.
         if ($post->post_type !== 'attachment' && in_array('attachment', $enabledTypes, true)) {
             $this->reevaluateChildAttachments($postId);
         }
@@ -45,22 +41,14 @@ class DocumentSync
         if ($this->shouldSyncPost($post)) {
             as_schedule_single_action(time(), 'vragenai_sync_post', ['post_id' => $postId], 'vragenai');
         } else {
-            // An enabled-type post that is no longer syncable must drop any document
-            // an earlier publish created. This covers every non-syncable transition:
-            // trashed, draft, private, pending, scheduled (future) and non-public
-            // custom statuses, plus a published post that becomes password-protected
-            // (which keeps post_status 'publish', so a status list would miss it).
-            // A post that was never synced resolves to no document, so the removal is
-            // a harmless no-op. Resolve the translation group now, while the post
-            // still exists.
+            // No longer syncable: drop any document an earlier publish left (no-op if never synced).
             as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
         }
     }
 
     public function onDeletePost(int $postId): void
     {
-        // before_delete_post fires before the row is removed, so translation
-        // links are still resolvable here.
+        // before_delete_post fires before the row is gone, so translations still resolve.
         $post = get_post($postId);
         if (! $post instanceof \WP_Post) {
             return;
@@ -68,10 +56,7 @@ class DocumentSync
 
         as_schedule_single_action(time(), 'vragenai_delete_document', [$this->buildRemovalPayload($post)], 'vragenai');
 
-        // Attachments outlive their parent's deletion (WordPress orphans them
-        // rather than removing them), so their documents would otherwise linger
-        // with a now-gone parent. Re-evaluate them; by the time the job runs the
-        // parent is gone and the attachment resolves as non-syncable.
+        // Attachments outlive their parent's deletion, so re-evaluate them too.
         $settings = (array) get_option('vragenai_settings', []);
         $enabledTypes = (array) ($settings['post_types'] ?? ['post', 'page']);
         if ($post->post_type !== 'attachment' && in_array('attachment', $enabledTypes, true)) {
@@ -86,9 +71,7 @@ class DocumentSync
             return;
         }
 
-        // A queued sync for a post that is no longer syncable (unpublished before
-        // the job ran, or a bulk sync re-running over it) reconciles by removing
-        // any document it left behind.
+        // No longer syncable: remove any document it left behind.
         if (! $this->shouldSyncPost($post)) {
             $this->removeTranslation($this->buildRemovalPayload($post));
 
@@ -111,16 +94,14 @@ class DocumentSync
      */
     public function syncPostDirectly(\WP_Post $post): void
     {
-        // Mirror syncPost(): reconcile a no-longer-syncable post by removing any
-        // document it left behind, so a full `wp vragenai sync` cleans up.
+        // No longer syncable: remove any document it left behind.
         if (! $this->shouldSyncPost($post)) {
             $this->removeTranslation($this->buildRemovalPayload($post));
 
             return;
         }
 
-        // Honour the same force-exclude filter the queued path applies, so a full
-        // sync does not re-index a post the site deliberately keeps out.
+        // Honour the force-exclude filter here too, matching syncPost().
         if (! (bool) apply_filters('vragenai_should_index_post', true, $post)) {
             $this->removeTranslation($this->buildRemovalPayload($post));
 
@@ -130,12 +111,7 @@ class DocumentSync
         $this->upsertDocument($post);
     }
 
-    /**
-     * Queue a re-evaluation of every attachment belonging to a post, so a change
-     * to the parent's visibility propagates to the attachments' own documents.
-     * syncPost() self-heals: it removes the attachment's document when the parent
-     * is no longer syncable and (re)creates it when the parent becomes syncable.
-     */
+    // Queue each attachment of a post for a sync; syncPost() self-heals, removing or recreating its document.
     private function reevaluateChildAttachments(int $parentId): void
     {
         $childIds = get_posts([
@@ -159,9 +135,7 @@ class DocumentSync
         $externalRef = 'wp_post_'.$post->ID;
 
         if (! $this->isStandaloneAttachment($post)) {
-            // All translations of a post share one document, keyed on the canonical
-            // (default-language) post. Content is sourced from that translation;
-            // meta_data.languages advertises every language the group is available in.
+            // All translations share one document keyed on the canonical (default-language) post.
             $translations = $this->languageResolver->getTranslations($post);
             $canonicalPostId = $this->languageResolver->getCanonicalPostId($post);
 
@@ -413,28 +387,18 @@ class DocumentSync
             return $this->shouldSyncAttachment($post);
         }
 
-        // A password-protected post keeps post_status 'publish' — the protection
-        // lives in post_password — so gating on status alone would send its body
-        // to the knowledge base.
+        // Password-protected posts keep post_status 'publish', so also require an empty password.
         return $post->post_status === 'publish' && $post->post_password === '';
     }
 
-    /**
-     * An attachment carries its own post_status ('inherit'/'publish'), not its
-     * parent's visibility, so gate it on the parent: an attachment of a draft,
-     * private or password-protected post must not be indexed. An attachment may
-     * also carry its own password, honoured regardless of parent. Parentless
-     * (media-library) uploads have no parent gate to inherit and sync as before,
-     * unless they carry their own password.
-     */
+    // An attachment's own status is not its parent's visibility, so gate on the parent;
+    // an attachment may also carry its own password. Parentless uploads sync unless protected.
     private function shouldSyncAttachment(\WP_Post $post): bool
     {
         if (! in_array($post->post_status, ['inherit', 'publish'], true)) {
             return false;
         }
 
-        // An attachment can carry its own password, independent of any parent;
-        // WordPress treats it as not publicly viewable, so don't index it.
         if ($post->post_password !== '') {
             return false;
         }

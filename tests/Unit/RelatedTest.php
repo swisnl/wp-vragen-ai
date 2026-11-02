@@ -144,9 +144,7 @@ class RelatedTest extends TestCase
     public function test_skips_posts_that_are_not_publicly_viewable(): void
     {
         $this->stubSite();
-        // A hit can resolve to a post the visitor may not see (a stale document
-        // for a scheduled or custom-status post, or one since deleted). 88 is such
-        // a post; 55 is public and must still render.
+        // 88 is not publicly viewable and must be skipped; 55 is public.
         Functions\when('is_post_publicly_viewable')->alias(static fn ($id): bool => (int) $id !== 88);
 
         $client = Mockery::mock(ApiClient::class);
@@ -161,9 +159,7 @@ class RelatedTest extends TestCase
     public function test_skips_password_protected_posts(): void
     {
         $this->stubSite();
-        // is_post_publicly_viewable() returns true for a published password-protected
-        // post (the password, not the status, hides it), so the block must gate on
-        // the password itself. 88 is password-protected; 55 is public.
+        // is_post_publicly_viewable() is true for password-protected posts; 88 is protected, 55 public.
         Functions\when('get_post')->alias(static fn ($id): \WP_Post => new \WP_Post([
             'ID' => (int) $id,
             'post_password' => (int) $id === 88 ? 'hunter2' : '',
