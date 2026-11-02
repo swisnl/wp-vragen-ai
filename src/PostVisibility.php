@@ -27,9 +27,13 @@ final class PostVisibility
     {
         /**
          * Filters whether a post counts as publicly visible for vragen.ai,
-         * governing both indexing and display.
+         * governing both indexing and display. Returning false to hide a post is
+         * the safe, symmetric use. On the read paths $public is WordPress' own
+         * verdict and returning true can also reveal an otherwise-hidden post; on
+         * the sync gate $public is always true (the hard status/password check is
+         * applied around this filter), so there it can only hide.
          *
-         * @param  bool  $public  The result of WordPress' own visibility checks.
+         * @param  bool  $public  The base verdict: WordPress' visibility checks on read, always true on sync.
          * @param  \WP_Post  $post  The post being evaluated.
          */
         return (bool) apply_filters('vragenai_post_is_visible', $public, $post);

@@ -66,6 +66,28 @@ class NativeSearchTest extends TestCase
         $this->assertSame(1, $query->max_num_pages);
     }
 
+    public function test_query_excludes_unpublished_and_password_protected_posts(): void
+    {
+        $this->stubSite();
+        $captured = null;
+        Functions\when('get_posts')->alias(function (array $args) use (&$captured): array {
+            $captured = $args;
+
+            return array_map(static fn ($id): \WP_Post => new \WP_Post(['ID' => (int) $id]), $args['post__in'] ?? []);
+        });
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('searchDocuments')->once()->andReturn([
+            'data' => [['attributes' => ['external_reference' => 'wp_post_42']]],
+            'meta' => ['total' => 1],
+        ]);
+
+        $this->nativeSearch($client)->maybeShortCircuit(null, new \WP_Query(['s' => 'hello', 'posts_per_page' => 10, 'paged' => 1]));
+
+        $this->assertSame('publish', $captured['post_status'] ?? null);
+        $this->assertFalse($captured['has_password'] ?? null);
+    }
+
     public function test_drops_results_vetoed_by_the_post_is_visible_filter(): void
     {
         $this->stubSite();
