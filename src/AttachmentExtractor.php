@@ -25,6 +25,12 @@ class AttachmentExtractor
     private function fromDirectAttachments(\WP_Post $post, array &$out, array &$seen): void
     {
         foreach (get_attached_media(self::PDF_MIME, $post->ID) as $attachment) {
+            // A child can carry its own password even when the parent is public;
+            // don't hand its text to the knowledge base, mirroring the sync gate.
+            if ($attachment->post_password !== '') {
+                continue;
+            }
+
             $url = wp_get_attachment_url($attachment->ID);
             if (! $url || isset($seen[$url])) {
                 continue;

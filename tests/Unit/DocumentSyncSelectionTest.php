@@ -98,6 +98,29 @@ class DocumentSyncSelectionTest extends TestCase
         $this->assertFalse($this->shouldSyncPost(new \WP_Post(['post_status' => 'publish'])));
     }
 
+    public function test_attachment_vetoed_by_visibility_filter_is_not_synced(): void
+    {
+        Functions\when('apply_filters')->alias(
+            static fn (string $hook, mixed $value = null, mixed $post = null): mixed => $hook === 'vragenai_post_is_visible' ? false : $value,
+        );
+
+        $this->assertFalse($this->shouldSyncPost(new \WP_Post([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'post_parent' => 0,
+        ])));
+    }
+
+    public function test_published_post_of_a_non_viewable_type_is_still_synced(): void
+    {
+        // The write gate trusts the admin's enabled-types choice, so a published
+        // post must not be dropped just because is_post_publicly_viewable() is
+        // false (e.g. a public CPT with publicly_queryable disabled).
+        Functions\when('is_post_publicly_viewable')->justReturn(false);
+
+        $this->assertTrue($this->shouldSyncPost(new \WP_Post(['post_status' => 'publish'])));
+    }
+
     public function test_sync_post_directly_removes_document_for_non_syncable_post(): void
     {
         Functions\when('get_locale')->justReturn('nl');

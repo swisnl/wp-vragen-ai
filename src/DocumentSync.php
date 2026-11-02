@@ -168,7 +168,7 @@ class DocumentSync
                 'post_type' => $source->post_type,
                 'post_format' => get_post_format($source) ?: 'standard',
                 'canonical_language' => $canonicalLanguage,
-                'languages' => array_keys($translations),
+                'languages' => $isAttachment ? [$canonicalLanguage] : $this->visibleLanguages($translations, $canonicalLanguage),
                 'published_at' => $source->post_date,
                 'modified_at' => $source->post_modified,
                 'taxonomies' => $this->getAllTaxonomyTerms($source),
@@ -204,6 +204,28 @@ class DocumentSync
         if (is_wp_error($result)) {
             $this->logError('upsert', $result);
         }
+    }
+
+    /**
+     * The languages the document should advertise: only translations an
+     * anonymous visitor can actually see, so an in-progress draft or a
+     * password-protected translation is not announced in the knowledge base.
+     * Falls back to the canonical language so a document always lists its own.
+     *
+     * @param  array<string, int>  $translations
+     * @return list<string>
+     */
+    private function visibleLanguages(array $translations, string $canonicalLanguage): array
+    {
+        $languages = [];
+        foreach ($translations as $language => $postId) {
+            $post = get_post($postId);
+            if ($post instanceof \WP_Post && PostVisibility::isPublic($post)) {
+                $languages[] = (string) $language;
+            }
+        }
+
+        return $languages !== [] ? $languages : [$canonicalLanguage];
     }
 
     /**
@@ -387,29 +409,28 @@ class DocumentSync
             return $this->shouldSyncAttachment($post);
         }
 
-        // Only index what we publish, and only while it stays publicly visible
-        // (PostVisibility adds the password, post-type and membership gates, so
-        // sync and the read paths share one rule).
-        return $post->post_status === 'publish' && PostVisibility::isPublic($post);
+        // Index only published, unprotected posts. The post type is already
+        // gated by the admin's enabled-types choice, so (unlike the read paths)
+        // we do not re-check post-type viewability here; we only share the
+        // membership veto, so sync and display agree on gated content.
+        return PostVisibility::vetoable($post->post_status === 'publish' && $post->post_password === '', $post);
     }
 
     // An attachment's own status is not its parent's visibility, so gate on the parent;
     // an attachment may also carry its own password. Parentless uploads sync unless protected.
+    // The membership veto is applied to the attachment itself, matching the read paths.
     private function shouldSyncAttachment(\WP_Post $post): bool
     {
-        if (! in_array($post->post_status, ['inherit', 'publish'], true)) {
-            return false;
-        }
+        $syncable = in_array($post->post_status, ['inherit', 'publish'], true)
+            && $post->post_password === ''
+            && ($post->post_parent === 0 || $this->parentIsSyncable($post->post_parent));
 
-        if ($post->post_password !== '') {
-            return false;
-        }
+        return PostVisibility::vetoable($syncable, $post);
+    }
 
-        if ($post->post_parent === 0) {
-            return true;
-        }
-
-        $parent = get_post($post->post_parent);
+    private function parentIsSyncable(int $parentId): bool
+    {
+        $parent = get_post($parentId);
 
         return $parent instanceof \WP_Post && $this->shouldSyncPost($parent);
     }

@@ -122,6 +122,12 @@ Show content related to the current post, powered by vragen.ai's similarity sear
 
 Related content uses the source post's synced document, so the post must already be synced. When there are no results (or the post isn't synced) nothing is shown to visitors.
 
+## Content visibility
+
+Only publicly visible posts are indexed and shown: draft, pending, scheduled, private, trashed, non-public custom statuses and password-protected posts are skipped on both the sync and the read paths (sync, related content and native search). For content a plugin gates by role or membership, return `false` from a `vragenai_post_is_visible` filter and the post is kept out of all three at once.
+
+One limitation: a post is indexed whole. Content is rendered in a background job without a logged-in visitor, so gating only **part** of an otherwise public post (a members-only section or block, a conditional field) may not take effect at index time. For section-level gating, strip the restricted content with `vragenai_document_render_content_source` or `vragenai_document_content_fragments`, drop specific ACF fields with `vragenai_include_acf_field`, or exclude the whole post with `vragenai_post_is_visible` / `vragenai_should_index_post`.
+
 ## Embedding Vragen.ai
 
 Besides syncing content, the plugin can embed a Vragen.ai deployment on your site:
