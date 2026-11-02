@@ -89,6 +89,15 @@ class DocumentSyncSelectionTest extends TestCase
         ])));
     }
 
+    public function test_post_vetoed_by_visibility_filter_is_not_synced(): void
+    {
+        Functions\when('apply_filters')->alias(
+            static fn (string $hook, mixed $value = null, mixed $post = null): mixed => $hook === 'vragenai_post_is_visible' ? false : $value,
+        );
+
+        $this->assertFalse($this->shouldSyncPost(new \WP_Post(['post_status' => 'publish'])));
+    }
+
     public function test_sync_post_directly_removes_document_for_non_syncable_post(): void
     {
         Functions\when('get_locale')->justReturn('nl');

@@ -26,7 +26,7 @@ Features:
 * Embed a vragen.ai deployment (page, popup or popover) with the Vragen.ai block, or load one site-wide from the settings screen.
 * Replace the native WordPress search with semantic search from vragen.ai (optional), with automatic fallback to the built-in search if the API is unavailable.
 * Show related content for the current post with the Vragen.ai related-content block or the `[vragenai_related]` shortcode.
-* Filters (`vragenai_should_index_post`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
+* Filters (`vragenai_should_index_post`, `vragenai_post_is_visible`, `vragenai_document_render_content_source`, `vragenai_document_content_fragments`, `vragenai_include_acf_field`, `vragenai_include_acf_block`, `vragenai_acf_block_denylist`, `vragenai_document_attributes`, `vragenai_native_search_options`) to customise indexing and search.
 
 The admin UI is available in English and Dutch, following your site language.
 
@@ -118,6 +118,7 @@ Note that `*.vragen.ai` does not match the bare `vragen.ai`, so include both. If
 * Fix: when a post is unpublished, trashed or password-protected, the documents for its attached media are re-evaluated and removed too, instead of lingering until the next full sync.
 * Fix: a media-library attachment with its own password is no longer indexed.
 * Fix: `wp vragenai sync` now honours the `vragenai_should_index_post` filter, so content a site excludes is not re-indexed by a full sync.
+* Dev: new `vragenai_post_is_visible` filter, applied to both indexing and the read paths from one shared check, so membership or paywall plugins can keep gated content out of the knowledge base, related content and search in one place.
 
 Thanks to Marish Pasco for finding and reporting these.
 

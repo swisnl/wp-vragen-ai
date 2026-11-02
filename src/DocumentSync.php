@@ -387,8 +387,10 @@ class DocumentSync
             return $this->shouldSyncAttachment($post);
         }
 
-        // Password-protected posts keep post_status 'publish', so also require an empty password.
-        return $post->post_status === 'publish' && $post->post_password === '';
+        // Only index what we publish, and only while it stays publicly visible
+        // (PostVisibility adds the password, post-type and membership gates, so
+        // sync and the read paths share one rule).
+        return $post->post_status === 'publish' && PostVisibility::isPublic($post);
     }
 
     // An attachment's own status is not its parent's visibility, so gate on the parent;

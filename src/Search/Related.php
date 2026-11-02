@@ -3,6 +3,7 @@
 namespace VragenAI\Search;
 
 use VragenAI\ApiClient;
+use VragenAI\PostVisibility;
 
 /**
  * "Related content" for the current post, powered by the vragen.ai similar
@@ -197,9 +198,8 @@ class Related
             $id = (int) $id;
             $post = get_post($id);
 
-            // A hit can resolve to a post the visitor may not see (scheduled, deleted, protected).
-            // is_post_publicly_viewable() returns true for a password-protected post, so check that too.
-            if (! $post instanceof \WP_Post || ! is_post_publicly_viewable($id) || $post->post_password !== '') {
+            // A hit can resolve to a post the visitor may not see (scheduled, deleted, protected, gated).
+            if (! $post instanceof \WP_Post || ! PostVisibility::isPublic($post)) {
                 continue;
             }
 

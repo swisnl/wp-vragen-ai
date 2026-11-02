@@ -145,7 +145,7 @@ class RelatedTest extends TestCase
     {
         $this->stubSite();
         // 88 is not publicly viewable and must be skipped; 55 is public.
-        Functions\when('is_post_publicly_viewable')->alias(static fn ($id): bool => (int) $id !== 88);
+        Functions\when('is_post_publicly_viewable')->alias(static fn ($post): bool => (int) $post->ID !== 88);
 
         $client = Mockery::mock(ApiClient::class);
         $client->shouldReceive('similarDocuments')->once()->andReturn($this->similarResponse());
@@ -164,6 +164,23 @@ class RelatedTest extends TestCase
             'ID' => (int) $id,
             'post_password' => (int) $id === 88 ? 'hunter2' : '',
         ]));
+
+        $client = Mockery::mock(ApiClient::class);
+        $client->shouldReceive('similarDocuments')->once()->andReturn($this->similarResponse());
+
+        $html = (new Related(new SearchService($client)))->renderBlock([]);
+
+        $this->assertStringContainsString('?p=55', $html);
+        $this->assertStringNotContainsString('?p=88', $html);
+    }
+
+    public function test_respects_the_post_is_visible_filter(): void
+    {
+        $this->stubSite();
+        // A membership/paywall plugin can veto an otherwise-public post.
+        Functions\when('apply_filters')->alias(
+            static fn (string $hook, mixed $value = null, mixed $post = null): mixed => $hook === 'vragenai_post_is_visible' && $post instanceof \WP_Post && $post->ID === 88 ? false : $value,
+        );
 
         $client = Mockery::mock(ApiClient::class);
         $client->shouldReceive('similarDocuments')->once()->andReturn($this->similarResponse());
